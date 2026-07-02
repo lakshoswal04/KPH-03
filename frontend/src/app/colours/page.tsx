@@ -42,15 +42,15 @@ function ColoursCatalogue() {
   const preview = selected ?? visible[0] ?? null;
 
   return (
-    <main className="min-h-screen bg-canvas px-6 pb-section-y pt-[calc(72px+60px)] md:px-section-x">
+    <main className="min-h-screen bg-cream px-6 pb-section-y pt-[calc(72px+60px)] md:px-section-x">
       <Reveal>
         <p className="font-sans text-label font-bold uppercase text-orange">The Full Catalogue</p>
-        <h1 className="mt-4 font-display text-section-h2 font-black text-ivory-text">
+        <h1 className="mt-4 font-display text-section-h2 font-black text-ink">
           Find your
           <br />
           shade<span className="text-orange">.</span>
         </h1>
-        <p className="mt-6 max-w-[420px] font-sans text-body text-muted">
+        <p className="mt-6 max-w-[420px] font-sans text-body text-ink-soft">
           Browse the Birla Opus families, tap any shade, and watch the wall repaint itself. Every
           shade is mixable in-store at Kamlesh.
         </p>
@@ -68,7 +68,7 @@ function ColoursCatalogue() {
                   "rounded-full px-4 py-1.5 font-sans text-[12px] font-semibold transition-colors duration-200",
                   family === f
                     ? "bg-orange text-white"
-                    : "border border-ivory-text/15 text-muted hover:border-ivory-text/40 hover:text-ivory-text",
+                    : "border border-ink/15 text-ink-soft hover:border-ink/40 hover:text-ink",
                 )}
               >
                 {f}
@@ -85,16 +85,16 @@ function ColoursCatalogue() {
                 className={cn(
                   "swatch group overflow-hidden rounded-xl border text-left transition-[transform,border-color] duration-200 hover:-translate-y-1",
                   preview?.id === colour.id
-                    ? "border-ivory-text"
-                    : "border-ivory-text/10 hover:border-ivory-text/40",
+                    ? "border-ink"
+                    : "border-ink/10 hover:border-ink/40",
                 )}
               >
                 <span className="block h-20 w-full" style={{ background: colour.hex }} />
                 <span className="block p-3">
-                  <span className="block font-sans text-[13px] font-semibold text-ivory-text">
+                  <span className="block font-sans text-[13px] font-semibold text-ink">
                     {colour.name}
                   </span>
-                  <span className="mt-0.5 block font-sans text-[11px] uppercase tracking-wider text-muted">
+                  <span className="mt-0.5 block font-sans text-[11px] uppercase tracking-wider text-ink-soft">
                     {colour.family} · {colour.hex}
                   </span>
                 </span>
@@ -109,8 +109,8 @@ function ColoursCatalogue() {
               <WallPreview colour={preview.hex} />
               <div className="mt-5 flex items-center justify-between">
                 <div>
-                  <p className="font-display text-2xl font-bold text-ivory-text">{preview.name}</p>
-                  <p className="font-sans text-[12px] uppercase tracking-wider text-muted">
+                  <p className="font-display text-2xl font-bold text-ink">{preview.name}</p>
+                  <p className="font-sans text-[12px] uppercase tracking-wider text-ink-soft">
                     {preview.family} · {preview.hex}
                   </p>
                 </div>

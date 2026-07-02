@@ -38,22 +38,22 @@ function TiltCard({ category, index }: { category: Category; index: number }) {
         data-tilt
         onMouseMove={onMove}
         onMouseLeave={onLeave}
-        className="group block cursor-pointer rounded-2xl border p-7 transition-[background-color,border-color,box-shadow] duration-[250ms] ease-out hover:shadow-card-lift"
+        className="group block cursor-pointer rounded-2xl border p-7 shadow-card-warm transition-[background-color,border-color,box-shadow] duration-[250ms] ease-out hover:shadow-card-lift"
         style={
           {
             transformStyle: "preserve-3d",
             borderColor: "rgba(26,26,10,0.06)",
             "--accent": category.accent,
-            background: "transparent",
+            background: "#FFFFFF",
           } as React.CSSProperties
         }
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = "color-mix(in srgb, var(--accent) 8%, transparent)";
+          e.currentTarget.style.background = "color-mix(in srgb, var(--accent) 8%, white)";
           e.currentTarget.style.borderColor = "color-mix(in srgb, var(--accent) 30%, transparent)";
         }}
         onMouseOut={(e) => {
           if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-          e.currentTarget.style.background = "transparent";
+          e.currentTarget.style.background = "#FFFFFF";
           e.currentTarget.style.borderColor = "rgba(26,26,10,0.06)";
         }}
       >
@@ -91,7 +91,7 @@ export function CategoryGrid() {
   });
 
   return (
-    <section className="bg-ivory px-6 py-section-y md:px-section-x">
+    <section className="bg-paper px-6 py-section-y md:px-section-x">
       <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
         <Reveal>
           <p className="font-sans text-label font-bold uppercase text-orange">

@@ -15,17 +15,17 @@ export default function CartPage() {
   useEffect(() => setMounted(true), []);
 
   return (
-    <main className="min-h-screen bg-canvas px-6 pb-section-y pt-[calc(72px+60px)] md:px-section-x">
+    <main className="min-h-screen bg-cream px-6 pb-section-y pt-[calc(72px+60px)] md:px-section-x">
       <Reveal>
         <p className="font-sans text-label font-bold uppercase text-orange">Your Order</p>
-        <h1 className="mt-4 font-display text-section-h2 font-black text-ivory-text">
+        <h1 className="mt-4 font-display text-section-h2 font-black text-ink">
           Cart<span className="text-orange">.</span>
         </h1>
       </Reveal>
 
       {!mounted ? null : items.length === 0 ? (
         <div className="mt-16 max-w-md">
-          <p className="font-sans text-body text-muted">
+          <p className="font-sans text-body text-ink-soft">
             Your cart is empty. Browse the Birla Opus range and add what your project needs.
           </p>
           <Link
@@ -43,14 +43,23 @@ export default function CartPage() {
               return (
                 <div
                   key={product.id}
-                  className="flex items-center gap-5 rounded-xl border border-ivory-text/5 bg-card p-5"
+                  className="flex items-center gap-5 rounded-xl border border-ink/5 bg-paper shadow-card-warm p-5"
                 >
-                  <span
-                    className="h-14 w-11 shrink-0 rounded-[4px_4px_10px_10px]"
-                    style={{
-                      background: `linear-gradient(180deg, ${accent} 0%, color-mix(in srgb, ${accent} 70%, black) 100%)`,
-                    }}
-                  />
+                  {product.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={product.image_url}
+                      alt=""
+                      className="h-16 w-14 shrink-0 object-contain drop-shadow"
+                    />
+                  ) : (
+                    <span
+                      className="h-14 w-11 shrink-0 rounded-[4px_4px_10px_10px]"
+                      style={{
+                        background: `linear-gradient(180deg, ${accent} 0%, color-mix(in srgb, ${accent} 70%, black) 100%)`,
+                      }}
+                    />
+                  )}
                   <div className="min-w-0 flex-1">
                     <p
                       className="font-sans text-[10px] font-bold uppercase tracking-[2px]"
@@ -60,43 +69,43 @@ export default function CartPage() {
                     </p>
                     <Link
                       href={`/products/${product.slug}`}
-                      className="block truncate font-display text-lg font-bold text-ivory-text transition-colors hover:text-orange"
+                      className="block truncate font-display text-lg font-bold text-ink transition-colors hover:text-orange"
                     >
                       {product.name}
                     </Link>
-                    <p className="font-sans text-[13px] text-muted">
+                    <p className="font-sans text-[13px] text-ink-soft">
                       ₹{formatINR(product.price_low)} / {product.price_unit}
                     </p>
                   </div>
-                  <div className="flex items-center rounded-btn border border-ivory-text/15">
+                  <div className="flex items-center rounded-btn border border-ink/15">
                     <button
                       type="button"
                       aria-label="Decrease quantity"
                       onClick={() => setQuantity(product.id, quantity - 1)}
-                      className="px-3 py-2 font-sans text-ivory-text transition-colors hover:text-orange"
+                      className="px-3 py-2 font-sans text-ink transition-colors hover:text-orange"
                     >
                       −
                     </button>
-                    <span className="min-w-[2rem] text-center font-sans text-sm font-semibold text-ivory-text">
+                    <span className="min-w-[2rem] text-center font-sans text-sm font-semibold text-ink">
                       {quantity}
                     </span>
                     <button
                       type="button"
                       aria-label="Increase quantity"
                       onClick={() => setQuantity(product.id, quantity + 1)}
-                      className="px-3 py-2 font-sans text-ivory-text transition-colors hover:text-orange"
+                      className="px-3 py-2 font-sans text-ink transition-colors hover:text-orange"
                     >
                       +
                     </button>
                   </div>
-                  <p className="w-24 text-right font-sans text-base font-semibold text-gold">
+                  <p className="w-24 text-right font-sans text-base font-semibold text-orange-deep">
                     ₹{formatINR(product.price_low * quantity)}
                   </p>
                   <button
                     type="button"
                     aria-label={`Remove ${product.name}`}
                     onClick={() => remove(product.id)}
-                    className="text-muted transition-colors hover:text-coral"
+                    className="text-ink-soft transition-colors hover:text-coral"
                   >
                     <Trash2 size={17} />
                   </button>
@@ -105,23 +114,23 @@ export default function CartPage() {
             })}
           </div>
 
-          <aside className="h-fit rounded-[20px] bg-ink p-8 lg:sticky lg:top-[100px]">
-            <h2 className="font-display text-2xl font-bold text-ivory-text">Summary</h2>
-            <div className="mt-6 space-y-3 border-b border-ivory-text/10 pb-6">
-              <div className="flex justify-between font-sans text-sm text-muted">
+          <aside className="h-fit rounded-[20px] bg-paper shadow-card-lift p-8 lg:sticky lg:top-[100px]">
+            <h2 className="font-display text-2xl font-bold text-ink">Summary</h2>
+            <div className="mt-6 space-y-3 border-b border-ink/10 pb-6">
+              <div className="flex justify-between font-sans text-sm text-ink-soft">
                 <span>Items</span>
                 <span>₹{formatINR(total)}</span>
               </div>
-              <div className="flex justify-between font-sans text-sm text-muted">
+              <div className="flex justify-between font-sans text-sm text-ink-soft">
                 <span>Delivery (Pune)</span>
                 <span className="text-mint">Free</span>
               </div>
             </div>
-            <div className="mt-5 flex justify-between font-sans text-lg font-semibold text-ivory-text">
+            <div className="mt-5 flex justify-between font-sans text-lg font-semibold text-ink">
               <span>Total</span>
-              <span className="text-gold">₹{formatINR(total)}</span>
+              <span className="text-orange-deep">₹{formatINR(total)}</span>
             </div>
-            <p className="mt-2 font-sans text-[12px] text-muted">
+            <p className="mt-2 font-sans text-[12px] text-ink-soft">
               Estimated from base prices — final billing confirmed on shade and pack size.
             </p>
             <Link

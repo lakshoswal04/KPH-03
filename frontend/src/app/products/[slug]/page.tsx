@@ -61,22 +61,28 @@ export default async function ProductPage({ params }: { params: { slug: string }
     `https://placehold.co/720x540/${accent.replace("#", "")}/FFFFFF?text=${encodeURIComponent(product.name)}`;
 
   return (
-    <main className="min-h-screen bg-canvas px-6 pb-section-y pt-[calc(72px+48px)] md:px-section-x">
-      <nav className="font-sans text-[13px] text-muted" aria-label="Breadcrumb">
+    <main className="min-h-screen bg-cream px-6 pb-section-y pt-[calc(72px+48px)] md:px-section-x">
+      <nav className="font-sans text-[13px] text-ink-soft" aria-label="Breadcrumb">
         <Link href="/products" className="transition-colors hover:text-orange">
           Products
         </Link>
         <span className="mx-2">/</span>
-        <span className="text-ivory-text">{product.name}</span>
+        <span className="text-ink">{product.name}</span>
       </nav>
 
       <div className="mt-10 grid grid-cols-1 gap-14 lg:grid-cols-2">
         <div
-          className="overflow-hidden rounded-[20px] border border-ivory-text/5"
-          style={{ background: `color-mix(in srgb, ${accent} 12%, transparent)` }}
+          className="flex items-center justify-center overflow-hidden rounded-[24px] border border-ink/5 p-10 shadow-card-warm"
+          style={{
+            background: `radial-gradient(circle at 50% 42%, #FFFFFF 0%, color-mix(in srgb, ${accent} 14%, #FFF9EE) 100%)`,
+          }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={imageUrl} alt={product.name} className="h-full w-full object-cover" />
+          <img
+            src={imageUrl}
+            alt={product.name}
+            className="bucket-float max-h-[440px] w-auto object-contain drop-shadow-[0_28px_32px_rgba(26,26,10,0.28)]"
+          />
         </div>
 
         <div>
@@ -86,10 +92,10 @@ export default async function ProductPage({ params }: { params: { slug: string }
           >
             Birla Opus · {product.sub_brand}
           </p>
-          <h1 className="mt-3 font-display text-[clamp(34px,4.5vw,56px)] font-black leading-[0.95] text-ivory-text">
+          <h1 className="mt-3 font-display text-[clamp(34px,4.5vw,56px)] font-black leading-[0.95] text-ink">
             {product.name}
           </h1>
-          <p className="mt-5 max-w-[480px] font-sans text-body text-muted">{product.description}</p>
+          <p className="mt-5 max-w-[480px] font-sans text-body text-ink-soft">{product.description}</p>
 
           <div className="mt-6 flex flex-wrap gap-2">
             {product.features.map((feature) => (
@@ -97,10 +103,10 @@ export default async function ProductPage({ params }: { params: { slug: string }
             ))}
           </div>
 
-          <p className="mt-8 font-sans text-[26px] font-semibold text-gold">
+          <p className="mt-8 font-sans text-[26px] font-semibold text-orange-deep">
             {priceRange(product.price_low, product.price_high, product.price_unit)}
           </p>
-          <p className="mt-1 font-sans text-[13px] text-muted">
+          <p className="mt-1 font-sans text-[13px] text-ink-soft">
             Final price depends on pack size and shade. Free delivery within Pune.
           </p>
 

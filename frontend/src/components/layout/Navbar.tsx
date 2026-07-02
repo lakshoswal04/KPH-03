@@ -51,17 +51,14 @@ export function Navbar() {
     };
   }, [mobileOpen]);
 
-  const textColour = scrolled ? "text-ink" : "text-ivory-text";
-
   return (
     <>
       <nav
         className={cn(
-          "fixed inset-x-0 top-0 z-[100] h-nav transition-[background-color,border-color,backdrop-filter] duration-[400ms] ease-out border-b",
+          "fixed inset-x-0 top-0 z-[100] h-nav text-ink transition-[background-color,border-color,backdrop-filter] duration-[400ms] ease-out border-b",
           scrolled
             ? "bg-ivory/95 backdrop-blur-[20px] border-[rgba(201,168,76,0.2)]"
             : "bg-transparent border-transparent",
-          textColour,
         )}
       >
         <div className="mx-auto flex h-full items-center justify-between px-6 lg:px-10">
@@ -125,14 +122,14 @@ export function Navbar() {
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-ink"
+            className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-cream"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
           >
             <button
-              className="absolute right-6 top-6 text-ivory-text"
+              className="absolute right-6 top-6 text-ink"
               aria-label="Close menu"
               onClick={() => setMobileOpen(false)}
             >
@@ -148,7 +145,7 @@ export function Navbar() {
                 >
                   <Link
                     href={link.href}
-                    className="font-display text-[36px] font-bold text-white"
+                    className="font-display text-[36px] font-bold text-ink"
                     onClick={() => setMobileOpen(false)}
                   >
                     {link.label}

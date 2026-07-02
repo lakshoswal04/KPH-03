@@ -36,11 +36,11 @@ export function ColourRecommender() {
   });
 
   return (
-    <div className="rounded-[20px] bg-ink p-7 md:p-10">
-      <h2 className="font-display text-[28px] font-bold text-ivory-text">
+    <div className="rounded-[20px] bg-paper shadow-card-lift p-7 md:p-10">
+      <h2 className="font-display text-[28px] font-bold text-ink">
         AI Colour Recommender
       </h2>
-      <p className="mt-2 font-sans text-sm text-muted">
+      <p className="mt-2 font-sans text-sm text-ink-soft">
         Tell us the room and the feeling you want — get three Birla Opus shades chosen for it.
       </p>
 
@@ -100,16 +100,16 @@ export function ColourRecommender() {
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="w-full rounded bg-orange p-4 font-sans text-sm font-bold uppercase tracking-[2px] text-white transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-orange-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ivory active:translate-y-0 disabled:opacity-60"
+          className="w-full rounded bg-orange p-4 font-sans text-sm font-bold uppercase tracking-[2px] text-white transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-orange-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink active:translate-y-0 disabled:opacity-60"
         >
           {mutation.isPending ? "Thinking…" : "Recommend Shades"}
         </button>
       </form>
 
       {mutation.data && (
-        <div className="mt-8 border-t border-ivory-text/10 pt-8">
+        <div className="mt-8 border-t border-ink/10 pt-8">
           {mutation.data.mock && (
-            <p className="mb-4 rounded-lg border border-gold/30 bg-gold/10 px-4 py-2.5 font-sans text-[12px] text-gold">
+            <p className="mb-4 rounded-lg border border-gold/30 bg-gold/10 px-4 py-2.5 font-sans text-[12px] text-orange-deep">
               Dev mode: showing curated picks — connect a Gemini API key for live AI
               recommendations.
             </p>
@@ -118,15 +118,15 @@ export function ColourRecommender() {
             {mutation.data.recommendations.map((rec) => (
               <div
                 key={rec.name}
-                className="overflow-hidden rounded-xl border border-ivory-text/10"
+                className="overflow-hidden rounded-xl border border-ink/10"
               >
                 <div className="h-20" style={{ background: rec.hex }} />
                 <div className="p-4">
-                  <p className="font-sans text-sm font-semibold text-ivory-text">{rec.name}</p>
-                  <p className="font-sans text-[11px] uppercase tracking-wider text-muted">
+                  <p className="font-sans text-sm font-semibold text-ink">{rec.name}</p>
+                  <p className="font-sans text-[11px] uppercase tracking-wider text-ink-soft">
                     {rec.hex}
                   </p>
-                  <p className="mt-2 font-sans text-[12px] leading-relaxed text-muted">
+                  <p className="mt-2 font-sans text-[12px] leading-relaxed text-ink-soft">
                     {rec.reason}
                   </p>
                 </div>

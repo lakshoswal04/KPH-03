@@ -26,15 +26,15 @@ export default function ProductsPage() {
   });
 
   return (
-    <main className="min-h-screen bg-canvas px-6 pb-section-y pt-[calc(72px+60px)] md:px-section-x">
+    <main className="min-h-screen bg-cream px-6 pb-section-y pt-[calc(72px+60px)] md:px-section-x">
       <Reveal>
         <p className="font-sans text-label font-bold uppercase text-orange">Birla Opus Range</p>
-        <h1 className="mt-4 font-display text-section-h2 font-black text-ivory-text">
+        <h1 className="mt-4 font-display text-section-h2 font-black text-ink">
           Every product,
           <br />
           in stock<span className="text-orange">.</span>
         </h1>
-        <p className="mt-6 max-w-[420px] font-sans text-body text-muted">
+        <p className="mt-6 max-w-[420px] font-sans text-body text-ink-soft">
           The complete Birla Opus catalogue — paints, waterproofing, wood finishes, and tools —
           ready for delivery across Pune.
         </p>
@@ -46,7 +46,7 @@ export default function ProductsPage() {
 
       <div className="mt-10">
         {isLoading ? (
-          <p className="py-20 text-center font-sans text-body text-muted">Loading products…</p>
+          <p className="py-20 text-center font-sans text-body text-ink-soft">Loading products…</p>
         ) : (
           <ProductGrid products={products} />
         )}

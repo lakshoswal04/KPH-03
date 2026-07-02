@@ -43,8 +43,8 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
   });
 
   const thClass =
-    "px-4 py-3 text-left font-sans text-[11px] font-bold uppercase tracking-[2px] text-ivory-text/40";
-  const tdClass = "px-4 py-3 font-sans text-sm text-ivory-text/85";
+    "px-4 py-3 text-left font-sans text-[11px] font-bold uppercase tracking-[2px] text-ink/40";
+  const tdClass = "px-4 py-3 font-sans text-sm text-ink/85";
 
   return (
     <div>
@@ -59,7 +59,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
                 "rounded-full px-5 py-2 font-sans text-[13px] font-semibold transition-colors duration-200",
                 tab === t
                   ? "bg-orange text-white"
-                  : "border border-ivory-text/15 text-muted hover:border-ivory-text/40 hover:text-ivory-text",
+                  : "border border-ink/15 text-ink-soft hover:border-ink/40 hover:text-ink",
               )}
             >
               {t}
@@ -72,16 +72,16 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
         <button
           type="button"
           onClick={onLogout}
-          className="font-sans text-sm font-semibold text-muted transition-colors hover:text-coral"
+          className="font-sans text-sm font-semibold text-ink-soft transition-colors hover:text-coral"
         >
           Log out
         </button>
       </div>
 
-      <div className="mt-8 overflow-x-auto rounded-xl border border-ivory-text/10 bg-card">
+      <div className="mt-8 overflow-x-auto rounded-xl border border-ink/10 bg-paper shadow-card-warm">
         {tab === "Enquiries" && (
           <table className="w-full min-w-[720px]">
-            <thead className="border-b border-ivory-text/10">
+            <thead className="border-b border-ink/10">
               <tr>
                 <th className={thClass}>When</th>
                 <th className={thClass}>Name</th>
@@ -92,7 +92,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
             </thead>
             <tbody>
               {(enquiries.data ?? []).map((e) => (
-                <tr key={e.id} className="border-b border-ivory-text/5">
+                <tr key={e.id} className="border-b border-ink/5">
                   <td className={tdClass}>{formatDate(e.created_at)}</td>
                   <td className={tdClass}>{e.name}</td>
                   <td className={tdClass}>{e.phone}</td>
@@ -105,7 +105,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
         )}
         {tab === "Surveys" && (
           <table className="w-full min-w-[720px]">
-            <thead className="border-b border-ivory-text/10">
+            <thead className="border-b border-ink/10">
               <tr>
                 <th className={thClass}>When</th>
                 <th className={thClass}>Name</th>
@@ -117,7 +117,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
             </thead>
             <tbody>
               {(surveys.data ?? []).map((s) => (
-                <tr key={s.id} className="border-b border-ivory-text/5">
+                <tr key={s.id} className="border-b border-ink/5">
                   <td className={tdClass}>{formatDate(s.created_at)}</td>
                   <td className={tdClass}>{s.name}</td>
                   <td className={tdClass}>{s.phone}</td>
@@ -131,7 +131,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
         )}
         {tab === "Orders" && (
           <table className="w-full min-w-[720px]">
-            <thead className="border-b border-ivory-text/10">
+            <thead className="border-b border-ink/10">
               <tr>
                 <th className={thClass}>When</th>
                 <th className={thClass}>#</th>
@@ -143,7 +143,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
             </thead>
             <tbody>
               {(orders.data ?? []).map((o) => (
-                <tr key={o.id} className="border-b border-ivory-text/5">
+                <tr key={o.id} className="border-b border-ink/5">
                   <td className={tdClass}>{formatDate(o.created_at)}</td>
                   <td className={tdClass}>{o.id}</td>
                   <td className={tdClass}>
@@ -152,7 +152,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
                   <td className={cn(tdClass, "max-w-[280px]")}>
                     {o.items.map((i) => `${i.product_name} ×${i.quantity}`).join(", ")}
                   </td>
-                  <td className={cn(tdClass, "text-gold")}>₹{formatINR(o.total_amount)}</td>
+                  <td className={cn(tdClass, "text-orange-deep")}>₹{formatINR(o.total_amount)}</td>
                   <td className={tdClass}>
                     <span
                       className={cn(
@@ -161,7 +161,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
                           ? "bg-mint/15 text-mint"
                           : o.status === "failed"
                             ? "bg-coral/15 text-coral"
-                            : "bg-gold/15 text-gold",
+                            : "bg-gold/15 text-orange-deep",
                       )}
                     >
                       {o.status}
@@ -194,9 +194,9 @@ export default function AdminPage() {
   });
 
   return (
-    <main className="min-h-screen bg-canvas px-6 pb-section-y pt-[calc(72px+60px)] md:px-section-x">
-      <p className="font-sans text-label font-bold uppercase text-gold">Staff Only</p>
-      <h1 className="mt-4 font-display text-section-h2 font-black text-ivory-text">
+    <main className="min-h-screen bg-cream px-6 pb-section-y pt-[calc(72px+60px)] md:px-section-x">
+      <p className="font-sans text-label font-bold uppercase text-orange-deep">Staff Only</p>
+      <h1 className="mt-4 font-display text-section-h2 font-black text-ink">
         Admin<span className="text-orange">.</span>
       </h1>
 
@@ -206,7 +206,7 @@ export default function AdminPage() {
         ) : (
           <form
             onSubmit={handleSubmit((values) => login.mutate(values))}
-            className="max-w-md rounded-[20px] bg-card p-8"
+            className="max-w-md rounded-[20px] bg-paper shadow-card-warm p-8"
             noValidate
           >
             <div className="space-y-6">

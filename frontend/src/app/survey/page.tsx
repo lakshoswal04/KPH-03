@@ -52,18 +52,18 @@ export default function SurveyPage() {
   });
 
   return (
-    <main className="min-h-screen bg-forest px-6 pb-section-y pt-[calc(72px+60px)] md:px-section-x">
+    <main className="min-h-screen bg-cream px-6 pb-section-y pt-[calc(72px+60px)] md:px-section-x">
       <div className="grid grid-cols-1 gap-16 lg:grid-cols-[45%_55%] lg:gap-20">
         <Reveal>
-          <p className="font-sans text-label font-bold uppercase text-ivory-text/45">
+          <p className="font-sans text-label font-bold uppercase text-ink/45">
             Free Service
           </p>
-          <h1 className="mt-4 font-display text-section-h2 font-black text-ivory-text">
+          <h1 className="mt-4 font-display text-section-h2 font-black text-ink">
             Book your free
             <br />
             site survey<span className="text-orange">.</span>
           </h1>
-          <p className="mt-6 max-w-[420px] font-sans text-body text-ivory-text/60">
+          <p className="mt-6 max-w-[420px] font-sans text-body text-ink/60">
             Available across all of Pune. Usually confirmed within 2 hours — no obligation, no
             charge.
           </p>
@@ -73,7 +73,7 @@ export default function SurveyPage() {
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange font-sans text-[13px] font-bold text-white">
                   {i + 1}
                 </span>
-                <p className="font-sans text-sm leading-relaxed text-ivory-text/75">{step}</p>
+                <p className="font-sans text-sm leading-relaxed text-ink/75">{step}</p>
               </li>
             ))}
           </ol>
@@ -81,14 +81,14 @@ export default function SurveyPage() {
 
         <Reveal delay={0.15}>
           {mutation.isSuccess ? (
-            <div className="rounded-[20px] bg-ink p-10 text-center">
+            <div className="rounded-[20px] bg-paper shadow-card-lift p-10 text-center">
               <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange text-3xl text-white">
                 ✓
               </span>
-              <h2 className="mt-6 font-display text-[32px] font-bold text-ivory-text">
+              <h2 className="mt-6 font-display text-[32px] font-bold text-ink">
                 Survey booked!
               </h2>
-              <p className="mx-auto mt-3 max-w-[380px] font-sans text-sm text-muted">
+              <p className="mx-auto mt-3 max-w-[380px] font-sans text-sm text-ink-soft">
                 Thanks, {mutation.data.name}. We&apos;ll call {mutation.data.phone} within 2 hours
                 to confirm your visit in {mutation.data.locality}.
               </p>
@@ -96,7 +96,7 @@ export default function SurveyPage() {
           ) : (
             <form
               onSubmit={handleSubmit((values) => mutation.mutate(values))}
-              className="rounded-[20px] bg-ink p-7 md:p-10"
+              className="rounded-[20px] bg-paper shadow-card-lift p-7 md:p-10"
               noValidate
             >
               <div className="space-y-6">
@@ -193,7 +193,7 @@ export default function SurveyPage() {
                 <button
                   type="submit"
                   disabled={mutation.isPending}
-                  className="w-full rounded bg-orange p-4 font-sans text-sm font-bold uppercase tracking-[2px] text-white transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-orange-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ivory active:translate-y-0 disabled:opacity-60"
+                  className="w-full rounded bg-orange p-4 font-sans text-sm font-bold uppercase tracking-[2px] text-white transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-orange-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink active:translate-y-0 disabled:opacity-60"
                 >
                   {mutation.isPending ? "Booking…" : "Book My Free Survey"}
                 </button>

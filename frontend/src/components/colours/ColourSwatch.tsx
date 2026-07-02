@@ -27,7 +27,8 @@ export function ColourSwatch({ hex, name, active = false, size = 52, onSelect }:
           width: size,
           height: size,
           background: hex,
-          borderColor: active ? "var(--ivory)" : "transparent",
+          borderColor: active ? "var(--ink)" : "#FFFFFF",
+          boxShadow: "0 2px 10px rgba(26,26,10,0.12)",
         }}
       />
       <span className="pointer-events-none absolute -top-9 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-ink px-3 py-1 font-sans text-[11px] font-medium text-ivory-text opacity-0 transition-opacity duration-200 group-hover:opacity-100">

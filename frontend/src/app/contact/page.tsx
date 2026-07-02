@@ -42,19 +42,19 @@ export default function ContactPage() {
   });
 
   return (
-    <main className="min-h-screen bg-canvas px-6 pb-section-y pt-[calc(72px+60px)] md:px-section-x">
+    <main className="min-h-screen bg-cream px-6 pb-section-y pt-[calc(72px+60px)] md:px-section-x">
       <div className="grid grid-cols-1 gap-16 lg:grid-cols-[45%_55%] lg:gap-20">
         <Reveal>
           <section id="about">
             <p className="font-sans text-label font-bold uppercase text-orange">
               About the Store
             </p>
-            <h1 className="mt-4 font-display text-section-h2 font-black text-ivory-text">
+            <h1 className="mt-4 font-display text-section-h2 font-black text-ink">
               Talk to
               <br />
               Kamlesh<span className="text-orange">.</span>
             </h1>
-            <p className="mt-6 max-w-[420px] font-sans text-body text-muted">
+            <p className="mt-6 max-w-[420px] font-sans text-body text-ink-soft">
               For 25 years, Kamlesh Paints &amp; Hardware has served homeowners, painters, and
               contractors from Shivajinagar. We stock the complete Birla Opus range — exclusively —
               with free delivery across Pune.
@@ -68,10 +68,10 @@ export default function ContactPage() {
                   {item.icon}
                 </span>
                 <div>
-                  <p className="font-sans text-[11px] font-bold uppercase tracking-[2px] text-ivory-text/40">
+                  <p className="font-sans text-[11px] font-bold uppercase tracking-[2px] text-ink/40">
                     {item.label}
                   </p>
-                  <p className="font-sans text-sm text-ivory-text">{item.value}</p>
+                  <p className="font-sans text-sm text-ink">{item.value}</p>
                 </div>
               </div>
             ))}
@@ -80,14 +80,14 @@ export default function ContactPage() {
 
         <Reveal delay={0.15}>
           {mutation.isSuccess ? (
-            <div className="rounded-[20px] bg-card p-10 text-center">
+            <div className="rounded-[20px] bg-paper shadow-card-warm p-10 text-center">
               <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange text-3xl text-white">
                 ✓
               </span>
-              <h2 className="mt-6 font-display text-[32px] font-bold text-ivory-text">
+              <h2 className="mt-6 font-display text-[32px] font-bold text-ink">
                 Enquiry received!
               </h2>
-              <p className="mx-auto mt-3 max-w-[380px] font-sans text-sm text-muted">
+              <p className="mx-auto mt-3 max-w-[380px] font-sans text-sm text-ink-soft">
                 Thanks, {mutation.data.name}. We&apos;ll get back to you on {mutation.data.phone}{" "}
                 shortly — usually within the hour during shop time.
               </p>
@@ -95,7 +95,7 @@ export default function ContactPage() {
           ) : (
             <form
               onSubmit={handleSubmit((values) => mutation.mutate(values))}
-              className="rounded-[20px] bg-card p-7 md:p-10"
+              className="rounded-[20px] bg-paper shadow-card-warm p-7 md:p-10"
               noValidate
             >
               <div className="space-y-6">
@@ -152,7 +152,7 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={mutation.isPending}
-                  className="w-full rounded bg-orange p-4 font-sans text-sm font-bold uppercase tracking-[2px] text-white transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-orange-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ivory active:translate-y-0 disabled:opacity-60"
+                  className="w-full rounded bg-orange p-4 font-sans text-sm font-bold uppercase tracking-[2px] text-white transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-orange-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink active:translate-y-0 disabled:opacity-60"
                 >
                   {mutation.isPending ? "Sending…" : "Send Enquiry"}
                 </button>

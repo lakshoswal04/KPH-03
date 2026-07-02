@@ -5,16 +5,16 @@
 :root {
   --orange: #E8590C;
   --ivory: #FAF7F0;
+  --cream: #FFF9EE;
   --ink: #1A1A0A;
-  --gold: #C9A876;
+  --marigold: #F7BD16;
+  --gold: #B8860B;
   --forest: #1F3D2C;
   --teal: #0ABFBC;
   --coral: #FF4D6D;
   --violet: #7B2FBE;
   --yellow: #F5C518;
-  --muted: rgba(245, 240, 232, 0.5);
-  --card-bg: #1A1A1A;
-  --card-bg2: #111118;
+  --muted: rgba(26, 26, 10, 0.55);
 }
 
 html {
@@ -22,14 +22,14 @@ html {
 }
 
 body {
-  background: #0B0B0B;
-  color: var(--ivory);
+  background: var(--cream);
+  color: var(--ink);
   font-size: 16px;
   line-height: 1.75;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Custom cursor — spec from the PRD, enabled on fine pointers only */
+/* Custom cursor — enabled on fine pointers only */
 #cursor {
   position: fixed;
   width: 12px;
@@ -63,18 +63,32 @@ body {
   display: none;
 }
 
-/* 3D paint can — continuous keyframes per PRD */
-@keyframes canRock {
-  0%, 100% { transform: rotateY(-18deg) rotateX(6deg); }
-  50%      { transform: rotateY(18deg)  rotateX(6deg); }
+/* Hero bucket: gentle float with a subtle rock — for the real packshot image */
+@keyframes bucketFloat {
+  0%, 100% { transform: translateY(0) rotate(-2.5deg); }
+  50%      { transform: translateY(-18px) rotate(2.5deg); }
 }
-@keyframes canFloat {
-  0%, 100% { top: 40px; }
-  50%      { top: 20px; }
+.bucket-float {
+  animation: bucketFloat 5s ease-in-out infinite;
+  will-change: transform;
 }
-.can-group {
-  position: absolute;
-  animation: canRock 6s ease-in-out infinite, canFloat 4s ease-in-out infinite;
+
+/* Decorative paint roller: slow tumble */
+@keyframes rollerDrift {
+  0%, 100% { transform: translateY(0) rotate(-14deg); }
+  50%      { transform: translateY(-12px) rotate(-6deg); }
+}
+.roller-drift {
+  animation: rollerDrift 6s ease-in-out infinite;
+}
+
+/* Small floating props (mini buckets, brush) */
+@keyframes propFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-14px); }
+}
+.prop-float {
+  animation: propFloat 4.5s ease-in-out infinite;
 }
 
 @keyframes ticker {

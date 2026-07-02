@@ -40,7 +40,7 @@ export function ProductFilters({
               "rounded-full px-5 py-2 font-sans text-[13px] font-semibold transition-colors duration-200",
               filters.tab === tab.id
                 ? "bg-orange text-white"
-                : "border border-ivory-text/15 text-muted hover:border-ivory-text/40 hover:text-ivory-text",
+                : "border border-ink/15 text-ink-soft hover:border-ink/40 hover:text-ink",
             )}
           >
             {tab.label}
@@ -50,13 +50,13 @@ export function ProductFilters({
 
       <div className="flex flex-wrap items-center gap-4">
         <div className="relative max-w-[280px] flex-1">
-          <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
+          <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft" />
           <input
             type="search"
             value={filters.search}
             onChange={(e) => onChange({ ...filters, search: e.target.value })}
             placeholder="Search products…"
-            className="w-full rounded-full border border-ivory-text/10 bg-ivory-text/5 py-2.5 pl-10 pr-4 font-sans text-sm text-ivory-text placeholder:text-muted focus:border-orange focus:outline-none"
+            className="w-full rounded-full border border-ink/10 bg-ivory-text/5 py-2.5 pl-10 pr-4 font-sans text-sm text-ink placeholder:text-ink-faint focus:border-orange focus:outline-none"
           />
         </div>
         <div className="flex flex-wrap gap-2">
@@ -71,7 +71,7 @@ export function ProductFilters({
                 "rounded-full border px-3.5 py-1.5 font-sans text-[11px] font-bold uppercase tracking-[1.5px] transition-colors duration-200",
                 filters.subBrand === brand
                   ? "border-gold bg-gold text-ink"
-                  : "border-ivory-text/15 text-muted hover:border-gold/60 hover:text-gold",
+                  : "border-ink/15 text-ink-soft hover:border-gold/60 hover:text-orange-deep",
               )}
             >
               {brand}

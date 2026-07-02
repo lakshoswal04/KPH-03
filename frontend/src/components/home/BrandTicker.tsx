@@ -21,9 +21,9 @@ export function BrandTicker() {
   return (
     <section
       aria-label="Birla Opus product ranges"
-      className="flex h-[68px] w-full items-center overflow-hidden bg-orange"
+      className="flex h-[68px] w-full items-center overflow-hidden bg-marigold"
     >
-      <div className="ticker-track font-sans text-[12px] font-bold uppercase tracking-[3px] text-canvas">
+      <div className="ticker-track font-sans text-[12px] font-bold uppercase tracking-[3px] text-ink">
         <TickerRun />
         <TickerRun />
       </div>

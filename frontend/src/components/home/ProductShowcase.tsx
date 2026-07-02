@@ -20,14 +20,32 @@ const TABS: { id: string; label: string }[] = [
   { id: "wood", label: "Wood Finishes" },
 ];
 
-function MiniCan({ accent }: { accent: string }) {
+export function ProductImage({
+  product,
+  className,
+}: {
+  product: Product;
+  className?: string;
+}) {
+  const accent = SUB_BRAND_ACCENTS[product.sub_brand] ?? "#C9A876";
+  if (product.image_url) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={product.image_url}
+        alt={`${product.name} bucket`}
+        className={cn("object-contain drop-shadow-lg", className)}
+      />
+    );
+  }
+  // Fallback mini can for any product without an official packshot.
   return (
-    <div className="transition-transform duration-300 group-hover:-translate-y-2 group-hover:scale-[1.06]">
-      <div className="mx-auto h-1.5 w-9 rounded-sm bg-ivory-text/25" />
+    <div className={className}>
+      <div className="mx-auto h-1.5 w-9 rounded-sm bg-ink/20" />
       <div
-        className="h-[100px] w-20 rounded-[6px_6px_14px_14px]"
+        className="h-full w-full rounded-[6px_6px_14px_14px]"
         style={{
-          background: `linear-gradient(90deg, rgba(0,0,0,0.3) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.3) 100%), linear-gradient(180deg, ${accent} 0%, color-mix(in srgb, ${accent} 70%, black) 100%)`,
+          background: `linear-gradient(90deg, rgba(0,0,0,0.25) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.25) 100%), linear-gradient(180deg, ${accent} 0%, color-mix(in srgb, ${accent} 70%, black) 100%)`,
         }}
       />
     </div>
@@ -39,9 +57,11 @@ function ShowcaseCard({ product }: { product: Product }) {
   const accent = SUB_BRAND_ACCENTS[product.sub_brand] ?? "#C9A876";
 
   return (
-    <div className="group cursor-pointer rounded-xl border border-ivory-text/5 bg-card p-6 transition-[border-color,background-color,transform] duration-300 hover:-translate-y-1.5 hover:border-orange/40 hover:bg-card-raised">
+    <div className="group cursor-pointer rounded-2xl border border-ink/[0.07] bg-paper p-6 shadow-card-warm transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1.5 hover:border-orange/30 hover:shadow-card-lift">
       <div className="flex gap-6">
-        <MiniCan accent={accent} />
+        <div className="flex w-24 shrink-0 items-start justify-center transition-transform duration-300 group-hover:-translate-y-2 group-hover:scale-[1.06]">
+          <ProductImage product={product} className="h-[110px] w-24" />
+        </div>
         <div className="min-w-0">
           <p
             className="font-sans text-[10px] font-bold uppercase tracking-[2px]"
@@ -49,10 +69,10 @@ function ShowcaseCard({ product }: { product: Product }) {
           >
             {product.sub_brand}
           </p>
-          <h3 className="mt-1 font-display text-[20px] font-bold leading-[1.1] text-ivory-text">
+          <h3 className="mt-1 font-display text-[20px] font-bold leading-[1.1] text-ink">
             {product.name}
           </h3>
-          <p className="mt-2 font-sans text-[13px] leading-relaxed text-muted">
+          <p className="mt-2 font-sans text-[13px] leading-relaxed text-ink-soft">
             {product.description}
           </p>
         </div>
@@ -62,7 +82,7 @@ function ShowcaseCard({ product }: { product: Product }) {
           <Badge key={feature}>{feature}</Badge>
         ))}
       </div>
-      <p className="mt-4 font-sans text-lg font-semibold text-gold">
+      <p className="mt-4 font-sans text-lg font-semibold text-orange-deep">
         {priceRange(product.price_low, product.price_high, product.price_unit)}
       </p>
       <div className="mt-4 flex items-center gap-4">
@@ -96,10 +116,10 @@ export function ProductShowcase() {
   const visible = (data?.items ?? []).filter((p) => p.tab === tab);
 
   return (
-    <section className="bg-card-deep px-6 py-section-y md:px-section-x">
+    <section className="bg-paper px-6 py-section-y md:px-section-x">
       <Reveal>
-        <p className="font-sans text-label font-bold uppercase text-gold">Our Products</p>
-        <h2 className="mt-4 font-display text-section-h2 font-black text-ivory-text">
+        <p className="font-sans text-label font-bold uppercase text-orange">Our Products</p>
+        <h2 className="mt-4 font-display text-section-h2 font-black text-ink">
           What we
           <br />
           carry<span className="text-orange">.</span>
@@ -107,7 +127,7 @@ export function ProductShowcase() {
       </Reveal>
 
       {/* Tab row */}
-      <div className="mt-10 flex flex-wrap gap-8 border-b border-ivory-text/10" role="tablist">
+      <div className="mt-10 flex flex-wrap gap-8 border-b border-ink/10" role="tablist">
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -117,8 +137,8 @@ export function ProductShowcase() {
             className={cn(
               "-mb-px border-b-2 py-2.5 font-sans text-[13px] font-semibold transition-colors duration-200",
               tab === t.id
-                ? "border-orange text-ivory-text"
-                : "border-transparent text-muted hover:text-ivory-text/80",
+                ? "border-orange text-ink"
+                : "border-transparent text-ink-soft hover:text-ink",
             )}
           >
             {t.label}

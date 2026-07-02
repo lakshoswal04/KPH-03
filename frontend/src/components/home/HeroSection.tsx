@@ -2,17 +2,19 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
+import { PaintBrush, PaintRoller } from "@/components/ui/FloatingProps";
 import { Magnetic } from "@/components/ui/Magnetic";
+import { PaintSplash } from "@/components/ui/PaintSplash";
 import { EASE_OUT_EXPO } from "@/components/ui/Reveal";
 import { useUiStore } from "@/store/uiStore";
 
 const HERO_SWATCHES = [
+  { hex: "#E8590C", name: "Kamlesh Orange" },
   { hex: "#A8C8A0", name: "Sage Green" },
   { hex: "#90B8D8", name: "Ocean Blue" },
   { hex: "#F5C518", name: "Sunflower" },
-  { hex: "#E8C4A0", name: "Warm Sand" },
   { hex: "#D4537E", name: "Dusty Rose" },
 ];
 
@@ -22,8 +24,6 @@ const CATEGORY_PANELS = [
   { name: "Waterproofing", bg: "#FF4D6D", canBody: "#D63755" },
   { name: "Hardware", bg: "#7B2FBE", canBody: "#5C2390" },
 ];
-
-const LABEL_DOTS = ["#E8590C", "#0ABFBC", "#F5C518", "#FF4D6D", "#7B2FBE"];
 
 const STATS = [
   { value: 2300, suffix: "+", format: (n: number) => n.toLocaleString("en-IN"), label: "Birla Opus Shades" },
@@ -64,124 +64,59 @@ function StatCounter({ value, suffix, format, label }: (typeof STATS)[number]) {
 
   return (
     <div>
-      <div className="font-display text-[52px] font-bold leading-none text-ivory-text">
+      <div className="font-display text-[52px] font-bold leading-none text-ink">
         <span ref={ref}>0</span>
         {suffix}
       </div>
-      <div className="mt-2 font-sans text-[11px] font-medium uppercase tracking-[2.5px] text-muted">
+      <div className="mt-2 font-sans text-[11px] font-medium uppercase tracking-[2.5px] text-ink-soft">
         {label}
       </div>
     </div>
   );
 }
 
-/** CSS 3D paint can that rocks + floats, and repaints itself with a
- * left-to-right brush wipe when a swatch is clicked. */
-function PaintCan() {
-  const canColour = useUiStore((s) => s.canColour);
-  const setCanColour = useUiStore((s) => s.setCanColour);
-  const [wipe, setWipe] = useState<{ colour: string; active: boolean } | null>(null);
-  const reduced = useReducedMotion();
-
-  const pick = (hex: string) => {
-    if (hex === canColour || wipe) return;
-    if (reduced) {
-      setCanColour(hex);
-      return;
-    }
-    setWipe({ colour: hex, active: false });
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => setWipe({ colour: hex, active: true })),
-    );
-  };
-
-  const onWipeEnd = () => {
-    if (!wipe) return;
-    setCanColour(wipe.colour);
-    setWipe(null);
-  };
-
-  const bodyGradient = (colour: string) =>
-    `linear-gradient(90deg, rgba(0,0,0,0.35) 0%, transparent 25%, transparent 75%, rgba(0,0,0,0.35) 100%),
-     linear-gradient(180deg, ${colour} 0%, color-mix(in srgb, ${colour} 75%, black) 100%)`;
+/** Official One Pure Elegance bucket floating over a paint-splash burst.
+ * Swatch clicks re-tint the splash behind the bucket. */
+function HeroBucket() {
+  const tint = useUiStore((s) => s.canColour);
+  const setTint = useUiStore((s) => s.setCanColour);
 
   return (
     <div className="relative z-[1] flex flex-col items-center justify-center">
-      {/* Scene */}
-      <div className="relative h-[360px] w-[260px]" style={{ perspective: "800px" }}>
-        <div
-          className="can-group left-1/2 h-full w-full -translate-x-1/2"
-          style={{ transformStyle: "preserve-3d" }}
-        >
-          {/* Handle */}
-          <div className="absolute left-1/2 top-[44px] h-9 w-[72px] -translate-x-1/2 rounded-t-[72px] border-[5px] border-b-0 border-[#888888]" />
-          {/* Lid */}
-          <div
-            className="absolute left-1/2 top-[76px] h-5 w-[170px] -translate-x-1/2"
-            style={{
-              background: "linear-gradient(180deg, #AAAAAA 0%, #777777 100%)",
-              borderRadius: "85px / 10px",
-            }}
-          />
-          {/* Body */}
-          <div
-            className="absolute bottom-10 left-1/2 h-[220px] w-[160px] -translate-x-1/2 overflow-hidden rounded-[8px_8px_20px_20px] shadow-can"
-            style={{ background: bodyGradient(canColour) }}
-          >
-            {/* Wipe overlay */}
-            {wipe && (
-              <div
-                className="absolute inset-0"
-                onTransitionEnd={onWipeEnd}
-                style={{
-                  background: bodyGradient(wipe.colour),
-                  clipPath: wipe.active ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
-                  transition: wipe.active
-                    ? "clip-path 0.9s cubic-bezier(0.4, 0, 0.2, 1)"
-                    : "none",
-                }}
-              />
-            )}
-            {/* Label */}
-            <div className="absolute left-1/2 top-1/2 flex h-[90px] w-[130px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded bg-ivory">
-              <span className="font-sans text-[9px] font-bold uppercase tracking-wide text-ink">
-                Birla Opus
-              </span>
-              <span className="font-display text-[13px] font-bold leading-tight text-ink">
-                ONE PURE
-              </span>
-              <span className="font-display text-[13px] font-bold leading-tight text-ink">
-                ELEGANCE
-              </span>
-              <span className="mt-1.5 flex gap-1">
-                {LABEL_DOTS.map((dot) => (
-                  <span
-                    key={dot}
-                    className="h-2 w-2 rounded-full"
-                    style={{ background: dot }}
-                  />
-                ))}
-              </span>
-            </div>
-          </div>
-          {/* Ground shadow */}
-          <div className="absolute bottom-2 left-1/2 h-5 w-[140px] -translate-x-1/2 rounded-full bg-black/40 blur-[12px]" />
-        </div>
+      <div className="relative flex h-[420px] w-full max-w-[480px] items-center justify-center md:h-[500px]">
+        <PaintSplash
+          tint={tint}
+          className="absolute inset-0 h-full w-full"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/products/one-pure-elegance.png"
+          alt="Birla Opus One Pure Elegance luxury emulsion bucket"
+          className="bucket-float relative z-[1] w-[240px] drop-shadow-[0_36px_40px_rgba(26,26,10,0.35)] md:w-[300px]"
+          data-splash-tint={tint}
+        />
+        {/* Decorative props */}
+        <PaintRoller
+          className="absolute -left-4 bottom-2 hidden md:block"
+          sleeve={tint}
+          size={110}
+        />
+        <PaintBrush className="absolute -right-2 top-6 hidden md:flex" bristleTip="#0ABFBC" />
       </div>
 
-      {/* Swatch row */}
-      <div className="mt-6 flex justify-center gap-3">
+      {/* Swatch row — tints the splash */}
+      <div className="mt-4 flex justify-center gap-3">
         {HERO_SWATCHES.map((swatch) => (
           <button
             key={swatch.hex}
             type="button"
             title={swatch.name}
-            aria-label={`Paint the can ${swatch.name}`}
-            onClick={() => pick(swatch.hex)}
-            className="swatch h-11 w-11 rounded-full border-[3px] transition-transform duration-200 hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange"
+            aria-label={`Tint the splash ${swatch.name}`}
+            onClick={() => setTint(swatch.hex)}
+            className="swatch h-11 w-11 rounded-full border-[3px] shadow-card-warm transition-transform duration-200 hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange"
             style={{
               background: swatch.hex,
-              borderColor: canColour === swatch.hex ? "var(--ivory)" : "transparent",
+              borderColor: tint === swatch.hex ? "var(--ink)" : "#FFFFFF",
             }}
           />
         ))}
@@ -215,17 +150,17 @@ export function HeroSection() {
         };
 
   return (
-    <section className="relative overflow-hidden bg-canvas pt-nav" style={{ minHeight: "100vh" }}>
-      {/* Background blobs */}
+    <section className="relative overflow-hidden bg-cream pt-nav" style={{ minHeight: "100vh" }}>
+      {/* Soft warm glows */}
       <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
-        <div className="absolute -left-[100px] -top-[150px] h-[700px] w-[700px] rounded-full bg-orange/10 blur-[140px]" />
-        <div className="absolute -bottom-[100px] -right-[100px] h-[600px] w-[600px] rounded-full bg-teal/[0.07] blur-[120px]" />
-        <div className="absolute right-[20%] top-[30%] h-[500px] w-[500px] rounded-full bg-violet/[0.06] blur-[100px]" />
+        <div className="absolute -left-[120px] -top-[120px] h-[520px] w-[520px] rounded-full bg-marigold/20 blur-[120px]" />
+        <div className="absolute -bottom-[80px] right-[10%] h-[420px] w-[420px] rounded-full bg-orange/10 blur-[110px]" />
+        <div className="absolute right-[35%] top-[10%] h-[300px] w-[300px] rounded-full bg-teal/10 blur-[100px]" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[55%_45%]">
+      <div className="grid grid-cols-1 lg:grid-cols-[52%_48%]">
         {/* Left column */}
-        <div className="relative z-[1] px-6 py-16 md:py-20 lg:pb-[260px] lg:pl-20 lg:pr-0">
+        <div className="relative z-[1] px-6 py-14 md:py-16 lg:pb-[240px] lg:pl-20 lg:pr-0">
           <motion.div
             className="flex items-center gap-4"
             {...(reduced
@@ -237,12 +172,12 @@ export function HeroSection() {
                 })}
           >
             <span className="inline-block h-[1.5px] w-8 bg-orange" />
-            <span className="font-sans text-label font-medium uppercase text-muted">
+            <span className="font-sans text-label font-medium uppercase text-ink-soft">
               Authorised Dealer · Shivajinagar, Pune
             </span>
           </motion.div>
 
-          <h1 className="mt-8 font-display text-hero-h1 text-ivory-text">
+          <h1 className="mt-8 font-display text-hero-h1 text-ink">
             <span className="block font-light italic">
               <Word delay={0.2}>Colour</Word> <Word delay={0.27}>is</Word>
             </span>
@@ -254,7 +189,7 @@ export function HeroSection() {
             </span>
           </h1>
 
-          <motion.p className="mt-8 max-w-[380px] font-sans text-body text-muted" {...fade(0.85)}>
+          <motion.p className="mt-8 max-w-[400px] font-sans text-body text-ink-soft" {...fade(0.85)}>
             Premium Birla Opus paints, waterproofing solutions, and painting tools — stocked and
             delivered across all of Pune.
           </motion.p>
@@ -270,7 +205,7 @@ export function HeroSection() {
             </Magnetic>
             <Link
               href="/survey"
-              className="inline-block rounded-btn border-[1.5px] border-ivory-text/30 px-[34px] py-[15px] font-sans text-[13px] font-bold uppercase tracking-[1.5px] text-ivory-text transition-colors duration-200 hover:border-ivory-text/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange"
+              className="inline-block rounded-btn border-[1.5px] border-ink/25 px-[34px] py-[15px] font-sans text-[13px] font-bold uppercase tracking-[1.5px] text-ink transition-colors duration-200 hover:border-ink/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange"
             >
               Book Free Site Survey
             </Link>
@@ -283,9 +218,9 @@ export function HeroSection() {
           </div>
         </div>
 
-        {/* Right column — 3D can */}
-        <div className="relative z-[1] px-6 pb-16 lg:pb-[220px] lg:pr-10">
-          <PaintCan />
+        {/* Right column — real bucket + splash */}
+        <div className="relative z-[1] px-6 pb-14 lg:pb-[220px] lg:pr-14">
+          <HeroBucket />
         </div>
       </div>
 
@@ -295,7 +230,7 @@ export function HeroSection() {
           <Link
             key={panel.name}
             href="/products"
-            className="group relative flex h-[150px] flex-col items-center justify-center pt-5 transition-[filter] duration-300 hover:brightness-[0.88] lg:h-full"
+            className="group relative flex h-[150px] flex-col items-center justify-center pt-5 transition-[filter] duration-300 hover:brightness-[0.92] lg:h-full"
             style={{ background: panel.bg, overflow: "visible" }}
           >
             {/* Mini can icon floating above the panel edge */}
@@ -306,8 +241,10 @@ export function HeroSection() {
                 style={{ background: panel.canBody }}
               />
             </span>
-            <span className="font-display text-[17px] font-bold text-white">{panel.name}</span>
-            <span className="mt-1 font-sans text-[11px] font-semibold uppercase tracking-[2px] text-white/80">
+            <span className="font-display text-[17px] font-bold text-white drop-shadow-sm">
+              {panel.name}
+            </span>
+            <span className="mt-1 font-sans text-[11px] font-semibold uppercase tracking-[2px] text-white/90">
               View Range →
             </span>
           </Link>

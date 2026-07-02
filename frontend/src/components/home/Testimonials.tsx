@@ -64,11 +64,13 @@ export function Testimonials() {
     trackRef.current?.scrollBy({ left: direction * 384, behavior: "smooth" });
 
   return (
-    <section id="testimonials" className="bg-canvas px-6 py-section-y md:px-section-x">
+    <section id="testimonials" className="bg-cream px-6 py-section-y md:px-section-x">
       <div className="flex items-end justify-between gap-6">
         <Reveal>
-          <p className="font-sans text-label font-bold uppercase text-gold">What Customers Say</p>
-          <h2 className="mt-4 font-display text-section-h2 font-bold text-ivory-text">
+          <p className="font-sans text-label font-bold uppercase text-orange">
+            What Customers Say
+          </p>
+          <h2 className="mt-4 font-display text-section-h2 font-bold text-ink">
             Real words from
             <br />
             Pune homes<span className="text-orange">.</span>
@@ -80,7 +82,7 @@ export function Testimonials() {
               type="button"
               aria-label="Scroll testimonials left"
               onClick={() => scroll(-1)}
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-ivory-text/15 font-sans text-base font-bold text-ivory-text transition-colors duration-200 hover:border-orange hover:bg-orange"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-ink/15 bg-paper font-sans text-base font-bold text-ink transition-colors duration-200 hover:border-orange hover:bg-orange hover:text-white"
             >
               ←
             </button>
@@ -88,7 +90,7 @@ export function Testimonials() {
               type="button"
               aria-label="Scroll testimonials right"
               onClick={() => scroll(1)}
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-ivory-text/15 font-sans text-base font-bold text-ivory-text transition-colors duration-200 hover:border-orange hover:bg-orange"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-ink/15 bg-paper font-sans text-base font-bold text-ink transition-colors duration-200 hover:border-orange hover:bg-orange hover:text-white"
             >
               →
             </button>
@@ -104,15 +106,15 @@ export function Testimonials() {
         {TESTIMONIALS.map((t) => (
           <article
             key={t.name}
-            className="min-w-[320px] snap-start rounded-xl border border-ivory-text/[0.07] bg-testimonial p-8 transition-[border-color,transform] duration-[250ms] hover:-translate-y-1 hover:border-orange/25 md:min-w-[360px]"
+            className="min-w-[320px] snap-start rounded-2xl border border-ink/[0.07] bg-paper p-8 shadow-card-warm transition-[border-color,transform,box-shadow] duration-[250ms] hover:-translate-y-1 hover:border-orange/25 hover:shadow-card-lift md:min-w-[360px]"
           >
             <Stars />
-            <blockquote className="mt-5 font-display text-xl font-light italic leading-normal text-ivory-text">
+            <blockquote className="mt-5 font-display text-xl font-light italic leading-normal text-ink">
               “{t.quote}”
             </blockquote>
-            <hr className="my-6 border-ivory-text/[0.08]" />
-            <p className="font-sans text-sm font-semibold text-ivory-text">{t.name}</p>
-            <p className="mt-0.5 font-sans text-xs text-muted">{t.role}</p>
+            <hr className="my-6 border-ink/10" />
+            <p className="font-sans text-sm font-semibold text-ink">{t.name}</p>
+            <p className="mt-0.5 font-sans text-xs text-ink-soft">{t.role}</p>
           </article>
         ))}
       </div>

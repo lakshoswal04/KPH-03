@@ -7,7 +7,7 @@ import type { Product } from "@/types";
 export function ProductGrid({ products }: { products: Product[] }) {
   if (products.length === 0) {
     return (
-      <p className="py-20 text-center font-sans text-body text-muted">
+      <p className="py-20 text-center font-sans text-body text-ink-soft">
         No products match your filters. Try clearing the search or picking another range.
       </p>
     );

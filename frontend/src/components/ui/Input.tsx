@@ -4,13 +4,13 @@ import { forwardRef, type InputHTMLAttributes, type SelectHTMLAttributes, type T
 
 import { cn } from "@/lib/utils";
 
-// Field styling from the PRD calculator card: translucent ivory on dark surfaces.
+// Light form fields: warm cream fill on white cards, orange focus ring.
 const fieldClasses =
-  "w-full rounded-lg border border-ivory-text/10 bg-ivory-text/5 px-4 py-3 font-sans text-sm text-ivory-text " +
-  "placeholder:text-muted focus:border-orange focus:outline-none transition-colors duration-200";
+  "w-full rounded-lg border border-ink/10 bg-cream px-4 py-3 font-sans text-sm text-ink " +
+  "placeholder:text-ink-faint focus:border-orange focus:outline-none transition-colors duration-200";
 
 export const labelClasses =
-  "mb-2 block font-sans text-label font-bold uppercase text-ivory-text/50";
+  "mb-2 block font-sans text-label font-bold uppercase text-ink-soft";
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
   function Input({ className, ...rest }, ref) {

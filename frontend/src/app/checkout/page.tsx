@@ -131,15 +131,15 @@ export default function CheckoutPage() {
 
   if (paidOrderId !== null) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-canvas px-6 pt-nav">
+      <main className="flex min-h-screen items-center justify-center bg-cream px-6 pt-nav">
         <div className="max-w-md text-center">
           <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange text-3xl text-white">
             ✓
           </span>
-          <h1 className="mt-6 font-display text-[40px] font-black text-ivory-text">
+          <h1 className="mt-6 font-display text-[40px] font-black text-ink">
             Order confirmed<span className="text-orange">.</span>
           </h1>
-          <p className="mt-3 font-sans text-body text-muted">
+          <p className="mt-3 font-sans text-body text-ink-soft">
             Order #{paidOrderId} is paid and being packed. We&apos;ll call you to confirm the
             delivery slot — free delivery anywhere in Pune.
           </p>
@@ -155,16 +155,16 @@ export default function CheckoutPage() {
   }
 
   return (
-    <main className="min-h-screen bg-canvas px-6 pb-section-y pt-[calc(72px+60px)] md:px-section-x">
+    <main className="min-h-screen bg-cream px-6 pb-section-y pt-[calc(72px+60px)] md:px-section-x">
       <Reveal>
         <p className="font-sans text-label font-bold uppercase text-orange">Almost there</p>
-        <h1 className="mt-4 font-display text-section-h2 font-black text-ivory-text">
+        <h1 className="mt-4 font-display text-section-h2 font-black text-ink">
           Checkout<span className="text-orange">.</span>
         </h1>
       </Reveal>
 
       {items.length === 0 ? (
-        <p className="mt-16 font-sans text-body text-muted">
+        <p className="mt-16 font-sans text-body text-ink-soft">
           Your cart is empty —{" "}
           <Link href="/products" className="font-semibold text-orange">
             add some products
@@ -175,7 +175,7 @@ export default function CheckoutPage() {
         <div className="mt-12 grid grid-cols-1 gap-12 lg:grid-cols-[1fr_360px]">
           <form
             onSubmit={handleSubmit((values) => orderMutation.mutate(values))}
-            className="h-fit rounded-[20px] bg-card p-7 md:p-10"
+            className="h-fit rounded-[20px] bg-paper shadow-card-warm p-7 md:p-10"
             noValidate
           >
             <div className="space-y-6">
@@ -226,37 +226,37 @@ export default function CheckoutPage() {
               <button
                 type="submit"
                 disabled={orderMutation.isPending || verifyMutation.isPending}
-                className="w-full rounded bg-orange p-4 font-sans text-sm font-bold uppercase tracking-[2px] text-white transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-orange-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ivory active:translate-y-0 disabled:opacity-60"
+                className="w-full rounded bg-orange p-4 font-sans text-sm font-bold uppercase tracking-[2px] text-white transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-orange-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink active:translate-y-0 disabled:opacity-60"
               >
                 {orderMutation.isPending || verifyMutation.isPending
                   ? "Processing…"
                   : `Pay ₹${formatINR(total)} with Razorpay`}
               </button>
               {payError && <p className="font-sans text-sm text-coral">{payError}</p>}
-              <p className="font-sans text-[12px] text-muted">
+              <p className="font-sans text-[12px] text-ink-soft">
                 Payments are processed securely by Razorpay and verified on our server. In dev mode
                 (no keys configured) a mock payment completes the flow.
               </p>
             </div>
           </form>
 
-          <aside className="h-fit rounded-[20px] bg-ink p-8 lg:sticky lg:top-[100px]">
-            <h2 className="font-display text-2xl font-bold text-ivory-text">Your items</h2>
-            <div className="mt-6 space-y-3 border-b border-ivory-text/10 pb-6">
+          <aside className="h-fit rounded-[20px] bg-paper shadow-card-lift p-8 lg:sticky lg:top-[100px]">
+            <h2 className="font-display text-2xl font-bold text-ink">Your items</h2>
+            <div className="mt-6 space-y-3 border-b border-ink/10 pb-6">
               {items.map(({ product, quantity }) => (
                 <div key={product.id} className="flex justify-between gap-4 font-sans text-sm">
-                  <span className="text-muted">
+                  <span className="text-ink-soft">
                     {product.name} × {quantity}
                   </span>
-                  <span className="shrink-0 text-ivory-text">
+                  <span className="shrink-0 text-ink">
                     ₹{formatINR(product.price_low * quantity)}
                   </span>
                 </div>
               ))}
             </div>
-            <div className="mt-5 flex justify-between font-sans text-lg font-semibold text-ivory-text">
+            <div className="mt-5 flex justify-between font-sans text-lg font-semibold text-ink">
               <span>Total</span>
-              <span className="text-gold">₹{formatINR(total)}</span>
+              <span className="text-orange-deep">₹{formatINR(total)}</span>
             </div>
           </aside>
         </div>

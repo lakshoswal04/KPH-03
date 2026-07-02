@@ -111,6 +111,27 @@ CATALOGUE_SHADES = [
     ("Mehendi Green", "#7A8B3A", "India Iconic"), ("Peacock Blue", "#1F6E8C", "India Iconic"),
 ]
 
+# Official Birla Opus packshots, downloaded into frontend/public/products/.
+# Applied even when products already exist, so re-running seed refreshes images.
+IMAGE_MAP = {
+    "one-pure-elegance": "/products/one-pure-elegance.png",
+    "calista-ever-clear": "/products/calista-ever-clear.png",
+    "calista-ever-stay": "/products/calista-ever-stay.png",
+    "style-color-smart": "/products/style-color-smart.png",
+    "one-true-look": "/products/one-true-look.png",
+    "calista-neo-star": "/products/calista-neo-star.png",
+    "calista-neo-star-shine": "/products/calista-neo-star-shine.png",
+    "style-power-fit": "/products/style-power-fit.png",
+    "alldry-wall-fix-4": "/products/alldry-wall-fix-4.png",
+    "alldry-wall-n-roof-12": "/products/alldry-wall-n-roof-12.png",
+    "alldry-salt-seal": "/products/alldry-salt-seal.png",
+    "alldry-crack-master-paste": "/products/alldry-crack-master-paste.png",
+    "allwood-pu-interior": "/products/allwood-pu-interior.png",
+    "allwood-italian-pu": "/products/allwood-italian-pu.png",
+    "allwood-melamine": "/products/allwood-melamine.png",
+    "allwood-wood-stain": "/products/allwood-wood-stain.png",
+}
+
 FAMILY_ORDER = [
     "Whites", "Yellows", "Oranges", "Reds", "Purples", "Blues",
     "Blue-Greens", "Greens", "Yellow-Greens", "Neutrals", "India Iconic",
@@ -148,6 +169,16 @@ def main() -> None:
             print(f"Seeded {len(PRODUCTS)} products")
         else:
             print("Products already seeded — skipping")
+
+        updated = 0
+        for product in db.query(Product).all():
+            image_url = IMAGE_MAP.get(product.slug)
+            if image_url and product.image_url != image_url:
+                product.image_url = image_url
+                updated += 1
+        if updated:
+            db.commit()
+            print(f"Updated {updated} product images")
 
         if db.query(Colour).count() == 0:
             order = 0
