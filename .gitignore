@@ -1,0 +1,23 @@
+# Node
+node_modules/
+.next/
+out/
+npm-debug.log*
+
+# Python
+backend/venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Env — never commit secrets
+.env
+.env.local
+.env*.local
+
+# OS / editor
+.DS_Store
+*.log
+
+# Screenshots from visual QA
+temporary screenshots/
