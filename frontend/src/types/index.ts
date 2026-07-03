@@ -180,6 +180,7 @@ export interface Enquiry {
   email: string | null;
   message: string;
   product_id: number | null;
+  product_name?: string | null;
   status: string;
   created_at: string;
 }

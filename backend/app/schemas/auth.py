@@ -35,9 +35,3 @@ class ProfileUpdate(BaseModel):
     full_name: str | None = Field(default=None, min_length=2, max_length=120)
     phone: str | None = Field(default=None, min_length=10, max_length=20)
     email: str | None = Field(default=None, min_length=3, max_length=120)
-
-
-# Kept for backwards compatibility (admin "who am I").
-class AdminMeOut(BaseModel):
-    email: str
-    is_admin: bool

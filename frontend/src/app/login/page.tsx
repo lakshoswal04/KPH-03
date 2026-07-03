@@ -8,6 +8,7 @@ import { Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { AuthBrandPanel } from "@/components/auth/AuthBrandPanel";
 import { Input, labelClasses } from "@/components/ui/Input";
 import { Reveal } from "@/components/ui/Reveal";
 import { useAuth } from "@/hooks/useAuth";
@@ -45,19 +46,21 @@ function LoginForm() {
 
   return (
     <main className="min-h-screen bg-cream px-6 pb-section-y pt-[calc(72px+60px)] md:px-section-x">
-      <Reveal>
-        <p className="font-sans text-label font-bold uppercase text-orange">Welcome back</p>
-        <h1 className="mt-4 font-display text-section-h2 font-black text-ink">
-          Log in<span className="text-orange">.</span>
-        </h1>
-      </Reveal>
+      <div className="mx-auto grid max-w-[1100px] items-stretch gap-10 lg:grid-cols-[1fr_1.05fr]">
+        <div>
+          <Reveal>
+            <p className="font-sans text-label font-bold uppercase text-orange">Welcome back</p>
+            <h1 className="mt-4 font-display text-section-h2 font-black text-ink">
+              Log in<span className="text-orange">.</span>
+            </h1>
+          </Reveal>
 
-      <form
-        onSubmit={handleSubmit((values) => login.mutate(values))}
-        className="mt-12 max-w-md rounded-[20px] bg-paper p-8 shadow-card-warm"
-        noValidate
-      >
-        <div className="space-y-6">
+          <form
+            onSubmit={handleSubmit((values) => login.mutate(values))}
+            className="mt-10 rounded-[20px] bg-paper p-8 shadow-card-warm"
+            noValidate
+          >
+            <div className="space-y-6">
           <div>
             <label htmlFor="lg-email" className={labelClasses}>Email</label>
             <Input id="lg-email" type="email" placeholder="you@example.com" {...register("email")} />
@@ -87,8 +90,19 @@ function LoginForm() {
               Create an account
             </Link>
           </p>
+            </div>
+          </form>
         </div>
-      </form>
+
+        <AuthBrandPanel
+          headline="Your paint projects, all in one place."
+          benefits={[
+            "Track every order and its delivery status",
+            "See your site-survey bookings & enquiries",
+            "Faster checkout with saved details",
+          ]}
+        />
+      </div>
     </main>
   );
 }

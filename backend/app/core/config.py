@@ -16,6 +16,18 @@ class Settings(BaseSettings):
     CLOUDINARY_API_SECRET: str = ""
     GEMINI_API_KEY: str = ""
 
+    # SMTP email (optional — notifications log to stdout until these are set).
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = ""
+    NOTIFY_EMAIL: str = ""
+
+    # Public base URL of this API — used to build absolute URLs for locally
+    # uploaded product images served from /uploads.
+    PUBLIC_BASE_URL: str = "http://localhost:8000"
+
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:3001"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
@@ -31,6 +43,18 @@ class Settings(BaseSettings):
     @property
     def gemini_enabled(self) -> bool:
         return self._is_real(self.GEMINI_API_KEY)
+
+    @property
+    def email_enabled(self) -> bool:
+        return self._is_real(self.SMTP_HOST) and self._is_real(self.SMTP_USER)
+
+    @property
+    def cloudinary_enabled(self) -> bool:
+        return (
+            self._is_real(self.CLOUDINARY_CLOUD_NAME)
+            and self._is_real(self.CLOUDINARY_API_KEY)
+            and self._is_real(self.CLOUDINARY_API_SECRET)
+        )
 
     @property
     def cors_origins_list(self) -> list[str]:

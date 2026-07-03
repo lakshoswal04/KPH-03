@@ -21,3 +21,6 @@ __pycache__/
 
 # Screenshots from visual QA
 temporary screenshots/
+
+# Locally-uploaded product images (served at /uploads)
+uploads/

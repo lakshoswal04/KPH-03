@@ -1,14 +1,17 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Input, Textarea, labelClasses } from "@/components/ui/Input";
 import { Reveal } from "@/components/ui/Reveal";
-import { apiPost } from "@/lib/api";
-import type { Enquiry, EnquiryPayload } from "@/types";
+import { apiGet, apiPost } from "@/lib/api";
+import { BUSINESS, mailHref, telHref, whatsappHref } from "@/lib/business";
+import type { Enquiry, EnquiryPayload, Product } from "@/types";
 
 const schema = z.object({
   name: z.string().min(2, "Enter your name"),
@@ -20,23 +23,42 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 const INFO = [
-  { icon: "📞", label: "Call us", value: "[YOUR PHONE NUMBER]" },
-  { icon: "✉", label: "Email", value: "[YOUR EMAIL ADDRESS]" },
-  { icon: "📍", label: "Visit the shop", value: "[YOUR FULL ADDRESS], Shivajinagar, Pune" },
-  { icon: "🕐", label: "Weekdays", value: "[YOUR WEEKDAY HOURS]" },
-  { icon: "🕐", label: "Weekends", value: "[YOUR WEEKEND HOURS]" },
+  { icon: "📞", label: "Call us", value: BUSINESS.phoneDisplay, href: telHref },
+  { icon: "💬", label: "WhatsApp", value: "Chat with us", href: whatsappHref("Hi Kamlesh Paints, I'd like to know more.") },
+  { icon: "✉", label: "Email", value: BUSINESS.email, href: mailHref },
+  { icon: "📍", label: "Visit the shop", value: BUSINESS.address, href: undefined },
+  { icon: "🕐", label: "Weekdays", value: BUSINESS.hours.weekday, href: undefined },
+  { icon: "🕐", label: "Weekends", value: BUSINESS.hours.weekend, href: undefined },
 ];
 
-export default function ContactPage() {
+function ContactForm() {
+  const productSlug = useSearchParams().get("product");
+
+  // Resolve ?product=<slug> so the enquiry carries the product context.
+  const { data: product } = useQuery({
+    queryKey: ["product", productSlug],
+    queryFn: () => apiGet<Product>(`/products/${productSlug}`),
+    enabled: Boolean(productSlug),
+  });
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) });
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: product
+      ? { message: `I'd like bulk pricing / details for ${product.name}.` }
+      : undefined,
+  });
 
   const mutation = useMutation({
     mutationFn: (values: FormValues) => {
-      const payload: EnquiryPayload = { ...values, email: values.email || null };
+      const payload: EnquiryPayload = {
+        ...values,
+        email: values.email || null,
+        product_id: product?.id ?? null,
+      };
       return apiPost<EnquiryPayload, Enquiry>("/enquiries", payload);
     },
   });
@@ -62,19 +84,35 @@ export default function ContactPage() {
           </section>
 
           <div className="mt-10 space-y-5">
-            {INFO.map((item) => (
-              <div key={item.label} className="flex items-start gap-4">
-                <span className="text-lg" aria-hidden="true">
-                  {item.icon}
-                </span>
-                <div>
-                  <p className="font-sans text-[11px] font-bold uppercase tracking-[2px] text-ink/40">
-                    {item.label}
-                  </p>
-                  <p className="font-sans text-sm text-ink">{item.value}</p>
+            {INFO.map((item) =>
+              item.href ? (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  target={item.href.startsWith("http") ? "_blank" : undefined}
+                  rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                  className="flex items-start gap-4 transition-colors hover:text-orange"
+                >
+                  <span className="text-lg" aria-hidden="true">{item.icon}</span>
+                  <div>
+                    <p className="font-sans text-[11px] font-bold uppercase tracking-[2px] text-ink/40">
+                      {item.label}
+                    </p>
+                    <p className="font-sans text-sm text-ink">{item.value}</p>
+                  </div>
+                </a>
+              ) : (
+                <div key={item.label} className="flex items-start gap-4">
+                  <span className="text-lg" aria-hidden="true">{item.icon}</span>
+                  <div>
+                    <p className="font-sans text-[11px] font-bold uppercase tracking-[2px] text-ink/40">
+                      {item.label}
+                    </p>
+                    <p className="font-sans text-sm text-ink">{item.value}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ),
+            )}
           </div>
         </Reveal>
 
@@ -98,6 +136,14 @@ export default function ContactPage() {
               className="rounded-[20px] bg-paper shadow-card-warm p-7 md:p-10"
               noValidate
             >
+              {product && (
+                <div className="mb-6 flex items-center gap-3 rounded-xl bg-marigold-soft/50 px-4 py-3">
+                  <span className="text-lg" aria-hidden="true">🪣</span>
+                  <p className="font-sans text-sm text-ink">
+                    Enquiring about <span className="font-bold">{product.name}</span>
+                  </p>
+                </div>
+              )}
               <div className="space-y-6">
                 <div className="grid gap-6 sm:grid-cols-2">
                   <div>
@@ -167,5 +213,13 @@ export default function ContactPage() {
         </Reveal>
       </div>
     </main>
+  );
+}
+
+export default function ContactPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-cream" />}>
+      <ContactForm />
+    </Suspense>
   );
 }

@@ -62,3 +62,18 @@ export async function apiPatch<TBody, TRes>(
   });
   return handle<TRes>(res);
 }
+
+/** Multipart upload (e.g. product images). Do NOT set Content-Type — the
+ * browser adds the multipart boundary automatically. */
+export async function apiUpload<TRes>(
+  path: string,
+  formData: FormData,
+  token?: string,
+): Promise<TRes> {
+  const res = await fetch(`${API_URL}/api/v1${path}`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body: formData,
+  });
+  return handle<TRes>(res);
+}

@@ -10,6 +10,7 @@ import { Input, Select, labelClasses } from "@/components/ui/Input";
 import { Magnetic } from "@/components/ui/Magnetic";
 import { Reveal } from "@/components/ui/Reveal";
 import { apiPost } from "@/lib/api";
+import { whatsappHref } from "@/lib/business";
 import { cn, formatINR } from "@/lib/utils";
 import type { CalcRequest, CalcResponse } from "@/types";
 
@@ -82,9 +83,7 @@ export function PaintCalculator() {
 
   const result = mutation.data;
   const waText = result
-    ? encodeURIComponent(
-        `Hi Kamlesh Paints, my estimate: ${result.litres} litres, ₹${formatINR(result.cost_low)} – ₹${formatINR(result.cost_high)}. Please help me order.`,
-      )
+    ? `Hi Kamlesh Paints, my estimate: ${result.litres} litres, ₹${formatINR(result.cost_low)} – ₹${formatINR(result.cost_high)}. Please help me order.`
     : "";
 
   return (
@@ -227,7 +226,7 @@ export function PaintCalculator() {
                       {formatINR(result.labour_high)}
                     </p>
                     <a
-                      href={`https://wa.me/91[YOUR WHATSAPP NUMBER]?text=${waText}`}
+                      href={whatsappHref(waText)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-4 inline-block font-sans text-sm font-semibold text-orange transition-opacity hover:opacity-75"

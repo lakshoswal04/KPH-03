@@ -8,6 +8,7 @@ import { Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { AuthBrandPanel } from "@/components/auth/AuthBrandPanel";
 import { Input, labelClasses } from "@/components/ui/Input";
 import { Reveal } from "@/components/ui/Reveal";
 import { useAuth } from "@/hooks/useAuth";
@@ -49,22 +50,24 @@ function SignupForm() {
 
   return (
     <main className="min-h-screen bg-cream px-6 pb-section-y pt-[calc(72px+60px)] md:px-section-x">
-      <Reveal>
-        <p className="font-sans text-label font-bold uppercase text-orange">Join us</p>
-        <h1 className="mt-4 font-display text-section-h2 font-black text-ink">
-          Create account<span className="text-orange">.</span>
-        </h1>
-        <p className="mt-4 max-w-[440px] font-sans text-body text-ink-soft">
-          Sign up to track your orders, site-survey bookings, and enquiries in one place.
-        </p>
-      </Reveal>
+      <div className="mx-auto grid max-w-[1100px] items-stretch gap-10 lg:grid-cols-[1fr_1.05fr]">
+        <div>
+          <Reveal>
+            <p className="font-sans text-label font-bold uppercase text-orange">Join us</p>
+            <h1 className="mt-4 font-display text-section-h2 font-black text-ink">
+              Create account<span className="text-orange">.</span>
+            </h1>
+            <p className="mt-4 max-w-[440px] font-sans text-body text-ink-soft">
+              Sign up to track your orders, site-survey bookings, and enquiries in one place.
+            </p>
+          </Reveal>
 
-      <form
-        onSubmit={handleSubmit((values) => signup.mutate(values))}
-        className="mt-10 max-w-md rounded-[20px] bg-paper p-8 shadow-card-warm"
-        noValidate
-      >
-        <div className="space-y-6">
+          <form
+            onSubmit={handleSubmit((values) => signup.mutate(values))}
+            className="mt-8 rounded-[20px] bg-paper p-8 shadow-card-warm"
+            noValidate
+          >
+            <div className="space-y-6">
           <div>
             <label htmlFor="su-name" className={labelClasses}>Full Name</label>
             <Input id="su-name" placeholder="Your name" {...register("full_name")} />
@@ -106,8 +109,19 @@ function SignupForm() {
               Log in
             </Link>
           </p>
+            </div>
+          </form>
         </div>
-      </form>
+
+        <AuthBrandPanel
+          headline="Join 25 years of colour expertise."
+          benefits={[
+            "Order the full Birla Opus range online",
+            "Book free site surveys & track them",
+            "Free delivery anywhere in Pune",
+          ]}
+        />
+      </div>
     </main>
   );
 }

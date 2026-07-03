@@ -91,10 +91,16 @@ def create_order(
 
 
 @router.post("/verify", response_model=PaymentVerifyResponse)
-def verify_payment(payload: PaymentVerifyRequest, db: Session = Depends(get_db)) -> PaymentVerifyResponse:
+def verify_payment(
+    payload: PaymentVerifyRequest,
+    db: Session = Depends(get_db),
+    current: User = Depends(get_current_user),
+) -> PaymentVerifyResponse:
     order = db.query(Order).filter(Order.id == payload.order_id).first()
     if order is None or order.razorpay_order_id != payload.razorpay_order_id:
         raise HTTPException(status_code=404, detail="Order not found")
+    if order.user_id != current.id:
+        raise HTTPException(status_code=403, detail="Not your order")
     if not verify_payment_signature(
         payload.razorpay_order_id, payload.razorpay_payment_id, payload.razorpay_signature
     ):

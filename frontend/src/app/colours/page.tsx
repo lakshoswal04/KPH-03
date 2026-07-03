@@ -7,6 +7,7 @@ import { Suspense, useState } from "react";
 import { WallPreview } from "@/components/colours/WallPreview";
 import { Reveal } from "@/components/ui/Reveal";
 import { apiGet } from "@/lib/api";
+import { whatsappHref } from "@/lib/business";
 import { cn } from "@/lib/utils";
 import type { Colour } from "@/types";
 
@@ -115,7 +116,7 @@ function ColoursCatalogue() {
                   </p>
                 </div>
                 <a
-                  href={`https://wa.me/91[YOUR WHATSAPP NUMBER]?text=${encodeURIComponent(`Hi Kamlesh Paints, I like the shade ${preview.name} (${preview.hex}). Please help me order it.`)}`}
+                  href={whatsappHref(`Hi Kamlesh Paints, I like the shade ${preview.name} (${preview.hex}). Please help me order it.`)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-sans text-sm font-semibold text-orange transition-opacity hover:opacity-75"

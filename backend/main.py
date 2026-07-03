@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1 import admin, ai, auth, categories, colours, enquiries, orders, products, surveys
 from app.core.config import settings
+from app.services.image_service import UPLOAD_DIR
 
 app = FastAPI(
     title="Kamlesh Paints & Hardware API",
@@ -17,6 +19,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve locally-uploaded product images (used when Cloudinary isn't configured).
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 API_V1 = "/api/v1"
 for router in (
