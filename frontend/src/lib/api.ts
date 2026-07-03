@@ -46,3 +46,19 @@ export async function apiPost<TBody, TRes>(
   });
   return handle<TRes>(res);
 }
+
+export async function apiPatch<TBody, TRes>(
+  path: string,
+  body: TBody,
+  token?: string,
+): Promise<TRes> {
+  const res = await fetch(`${API_URL}/api/v1${path}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+  return handle<TRes>(res);
+}

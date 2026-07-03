@@ -160,6 +160,7 @@ export interface OrderItem {
 
 export interface Order {
   id: number;
+  user_id?: number | null;
   customer_name: string;
   phone: string;
   email: string | null;
@@ -199,4 +200,26 @@ export interface Survey {
 export interface TokenResponse {
   access_token: string;
   token_type: string;
+}
+
+export interface UserMe {
+  id: number;
+  full_name: string | null;
+  email: string;
+  phone: string | null;
+  is_admin: boolean;
+  created_at: string;
+}
+
+export interface RegisterPayload {
+  full_name: string;
+  email: string;
+  phone: string;
+  password: string;
+}
+
+export interface ProfileUpdatePayload {
+  full_name?: string;
+  phone?: string;
+  email?: string;
 }

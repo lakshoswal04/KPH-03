@@ -18,10 +18,16 @@ def main() -> None:
     try:
         user = db.query(User).filter(User.email == email).first()
         if user is None:
-            db.add(User(email=email, hashed_password=hash_password(password), is_admin=True))
+            db.add(User(
+                full_name="Administrator", email=email,
+                hashed_password=hash_password(password), is_admin=True,
+            ))
             print(f"Created admin {email}")
         else:
             user.hashed_password = hash_password(password)
+            user.is_admin = True
+            if not user.full_name:
+                user.full_name = "Administrator"
             print(f"Updated password for {email}")
         db.commit()
         if password == DEFAULT_PASSWORD:

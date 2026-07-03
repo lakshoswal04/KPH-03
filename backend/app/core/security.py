@@ -28,27 +28,56 @@ def create_access_token(subject: str) -> str:
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
-def get_current_admin(
-    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
-    db: Session = Depends(get_db),
-) -> User:
-    unauthorized = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid or missing credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+UNAUTHORIZED = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Invalid or missing credentials",
+    headers={"WWW-Authenticate": "Bearer"},
+)
+
+
+def _user_from_credentials(
+    credentials: HTTPAuthorizationCredentials | None, db: Session
+) -> User | None:
+    """Decode a Bearer token and return the matching user, or None if the token
+    is absent/invalid/unknown."""
     if credentials is None:
-        raise unauthorized
+        return None
     try:
         payload = jwt.decode(
             credentials.credentials, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
         )
     except JWTError:
-        raise unauthorized
+        return None
     email: str | None = payload.get("sub")
     if email is None:
-        raise unauthorized
-    user = db.query(User).filter(User.email == email, User.is_admin.is_(True)).first()
+        return None
+    return db.query(User).filter(User.email == email).first()
+
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    db: Session = Depends(get_db),
+) -> User:
+    """Any authenticated user (customer or admin). Raises 401 if not signed in."""
+    user = _user_from_credentials(credentials, db)
     if user is None:
-        raise unauthorized
+        raise UNAUTHORIZED
+    return user
+
+
+def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    db: Session = Depends(get_db),
+) -> User | None:
+    """Resolve the current user if a valid token is present, else None (no raise)."""
+    return _user_from_credentials(credentials, db)
+
+
+def get_current_admin(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    db: Session = Depends(get_db),
+) -> User:
+    user = _user_from_credentials(credentials, db)
+    if user is None or not user.is_admin:
+        raise UNAUTHORIZED
     return user

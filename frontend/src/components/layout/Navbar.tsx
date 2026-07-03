@@ -1,10 +1,11 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Heart, Menu, Search, ShoppingCart, X } from "lucide-react";
+import { Heart, Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ export function Navbar() {
   const setMobileOpen = useUiStore((s) => s.setMobileMenuOpen);
   const { count } = useCart();
   const { count: wishCount } = useWishlist();
+  const { isAuthenticated, user } = useAuth();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -120,6 +122,18 @@ export function Navbar() {
               </motion.span>
             </Link>
             <Link
+              href={mounted && isAuthenticated ? "/profile" : "/login"}
+              aria-label={mounted && isAuthenticated ? "Your account" : "Log in"}
+              className="flex items-center gap-1.5 transition-opacity hover:opacity-70"
+            >
+              <User size={18} strokeWidth={2} />
+              {mounted && isAuthenticated && user?.full_name && (
+                <span className="hidden font-sans text-[13px] font-medium lg:inline">
+                  {user.full_name.split(" ")[0]}
+                </span>
+              )}
+            </Link>
+            <Link
               href="/#calculator"
               className="hidden rounded-btn border-[1.5px] border-current px-5 py-[9px] font-sans text-[12px] font-semibold uppercase tracking-[1.5px] transition-colors duration-200 hover:border-orange hover:bg-orange hover:text-white md:block"
             >
@@ -170,6 +184,19 @@ export function Navbar() {
                   </Link>
                 </motion.li>
               ))}
+              <motion.li
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: NAV_LINKS.length * 0.05, duration: 0.35 }}
+              >
+                <Link
+                  href={mounted && isAuthenticated ? "/profile" : "/login"}
+                  className="font-display text-[36px] font-bold text-orange"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {mounted && isAuthenticated ? "My Account" : "Log In"}
+                </Link>
+              </motion.li>
             </ul>
           </motion.div>
         )}

@@ -10,6 +10,9 @@ class Enquiry(Base):
     __tablename__ = "enquiries"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True, index=True
+    )
     name: Mapped[str] = mapped_column(String(120))
     phone: Mapped[str] = mapped_column(String(20))
     email: Mapped[str | None] = mapped_column(String(120), nullable=True)
@@ -27,6 +30,9 @@ class Survey(Base):
     __tablename__ = "surveys"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True, index=True
+    )
     name: Mapped[str] = mapped_column(String(120))
     phone: Mapped[str] = mapped_column(String(20))
     address: Mapped[str] = mapped_column(Text)

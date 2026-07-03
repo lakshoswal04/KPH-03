@@ -3,12 +3,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Input, Textarea, labelClasses } from "@/components/ui/Input";
 import { Reveal } from "@/components/ui/Reveal";
+import { useAuth } from "@/hooks/useAuth";
 import { lineUnitPrice, useCart } from "@/hooks/useCart";
 import { apiPost } from "@/lib/api";
 import { formatINR } from "@/lib/utils";
@@ -63,14 +64,31 @@ function loadRazorpayScript(): Promise<boolean> {
 
 export default function CheckoutPage() {
   const { items, total, clear, keyOf } = useCart();
+  const { token, user, isAuthenticated } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const [paidOrderId, setPaidOrderId] = useState<number | null>(null);
   const [payError, setPayError] = useState<string | null>(null);
+
+  useEffect(() => setMounted(true), []);
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
+
+  // Prefill the shipping form from the signed-in user's saved details.
+  useEffect(() => {
+    if (user) {
+      reset({
+        customer_name: user.full_name ?? "",
+        phone: user.phone ?? "",
+        email: user.email ?? "",
+        address: "",
+      });
+    }
+  }, [user, reset]);
 
   const verifyMutation = useMutation({
     mutationFn: (payload: PaymentVerifyPayload) =>
@@ -93,7 +111,7 @@ export default function CheckoutPage() {
           variant_label: i.variant?.label ?? null,
         })),
       };
-      return apiPost<OrderCreatePayload, OrderCreateResponse>("/orders", payload);
+      return apiPost<OrderCreatePayload, OrderCreateResponse>("/orders", payload, token ?? undefined);
     },
     onSuccess: async (order, values) => {
       setPayError(null);
@@ -153,6 +171,36 @@ export default function CheckoutPage() {
           >
             Continue Shopping →
           </Link>
+        </div>
+      </main>
+    );
+  }
+
+  // Login is required to place an order (orders are linked to the account).
+  if (mounted && !isAuthenticated) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-cream px-6 pt-nav">
+        <div className="max-w-md rounded-[20px] bg-paper p-10 text-center shadow-card-warm">
+          <h1 className="font-display text-[32px] font-black text-ink">
+            Log in to check out<span className="text-orange">.</span>
+          </h1>
+          <p className="mt-3 font-sans text-body text-ink-soft">
+            Sign in or create an account so we can track your order and keep it in your profile.
+          </p>
+          <div className="mt-8 flex flex-col gap-3">
+            <Link
+              href="/login?next=/checkout"
+              className="rounded-btn bg-orange px-6 py-3.5 font-sans text-[13px] font-bold uppercase tracking-[1.5px] text-white transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-orange-deep"
+            >
+              Log in
+            </Link>
+            <Link
+              href="/signup?next=/checkout"
+              className="rounded-btn border border-ink/15 px-6 py-3.5 font-sans text-[13px] font-bold uppercase tracking-[1.5px] text-ink-soft transition-colors hover:border-orange hover:text-orange"
+            >
+              Create an account
+            </Link>
+          </div>
         </div>
       </main>
     );
