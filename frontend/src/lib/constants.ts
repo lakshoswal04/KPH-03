@@ -5,5 +5,6 @@ export const SUB_BRAND_ACCENTS: Record<string, string> = {
   STYLE: "#A8C8A0",
   ALLDRY: "#FF4D6D",
   ALLWOOD: "#7B2FBE",
-  KAMLESH: "#E8590C",
+  TOOLS: "#E8590C",
+  HARDWARE: "#2F6FB5",
 };

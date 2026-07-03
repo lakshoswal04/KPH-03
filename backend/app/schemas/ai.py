@@ -39,6 +39,12 @@ class ProjectPlanRequest(BaseModel):
     timeline: str = Field(min_length=2, max_length=60)
 
 
+class PlanStep(BaseModel):
+    title: str
+    detail: str
+
+
 class ProjectPlanResponse(BaseModel):
-    plan: str
+    steps: list[PlanStep]
+    summary: str
     mock: bool

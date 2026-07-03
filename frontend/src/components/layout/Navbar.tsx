@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { useCart } from "@/hooks/useCart";
+import { useWishlist } from "@/hooks/useWishlist";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/store/uiStore";
 import { PaintFan } from "@/components/ui/PaintFan";
@@ -16,7 +17,6 @@ const NAV_LINKS = [
   { label: "Products", href: "/products" },
   { label: "AI Studio", href: "/ai-studio" },
   { label: "Site Survey", href: "/survey" },
-  { label: "About", href: "/contact#about" },
   { label: "Contact", href: "/contact" },
 ];
 
@@ -25,6 +25,7 @@ export function Navbar() {
   const mobileOpen = useUiStore((s) => s.mobileMenuOpen);
   const setMobileOpen = useUiStore((s) => s.setMobileMenuOpen);
   const { count } = useCart();
+  const { count: wishCount } = useWishlist();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -92,8 +93,19 @@ export function Navbar() {
             <Link href="/products" aria-label="Search products" className="hidden sm:block transition-opacity hover:opacity-70">
               <Search size={18} strokeWidth={2} />
             </Link>
-            <Link href="/products" aria-label="Wishlist" className="hidden sm:block transition-opacity hover:opacity-70">
-              <Heart size={18} strokeWidth={2} />
+            <Link href="/favourites" aria-label="Favourites" className="relative hidden transition-opacity hover:opacity-70 sm:block">
+              <Heart size={18} strokeWidth={2} fill={mounted && wishCount > 0 ? "currentColor" : "none"} className={mounted && wishCount > 0 ? "text-coral" : ""} />
+              {mounted && wishCount > 0 && (
+                <motion.span
+                  key={wishCount}
+                  initial={{ scale: 1 }}
+                  animate={{ scale: [1, 1.4, 1] }}
+                  transition={{ duration: 0.35 }}
+                  className="absolute -right-2.5 -top-2.5 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-coral font-sans text-[10px] font-bold text-white"
+                >
+                  {wishCount}
+                </motion.span>
+              )}
             </Link>
             <Link href="/cart" aria-label="Cart" className="relative transition-opacity hover:opacity-70">
               <ShoppingCart size={18} strokeWidth={2} />

@@ -1,4 +1,5 @@
 import logging
+import re
 from concurrent.futures import ThreadPoolExecutor
 
 from app.core.config import settings
@@ -40,6 +41,18 @@ def _generate_text(prompt: str) -> str:
         return response.text
 
     return _gemini_pool.submit(_run).result(timeout=GEMINI_TIMEOUT_SECONDS)
+
+
+def _clean(text: str) -> str:
+    """Strip stray markdown so responses are plain, attractive prose.
+
+    Removes leading list/heading markers and inline ** __ ` emphasis that the
+    model sometimes emits despite being asked for plain text.
+    """
+    text = re.sub(r"[*_`#]+", "", str(text))
+    text = re.sub(r"^\s*[-•\d.]+\s*", "", text)  # leading bullet / "1." markers
+    return text.strip()
+
 
 # Curated Birla Opus explorer shades used for deterministic mock recommendations
 # when no Gemini key is configured.
@@ -98,7 +111,7 @@ def recommend_colours(room_type: str, mood: str, lighting: str) -> tuple[list[di
         text = _generate_text(prompt).strip().removeprefix("```json").removesuffix("```").strip()
         parsed = json.loads(text)
         recs = [
-            {"name": str(r["name"]), "hex": str(r["hex"]), "reason": str(r["reason"])}
+            {"name": _clean(r["name"]), "hex": str(r["hex"]).strip(), "reason": _clean(r["reason"])}
             for r in parsed[:3]
         ]
         if recs:
@@ -109,32 +122,68 @@ def recommend_colours(room_type: str, mood: str, lighting: str) -> tuple[list[di
         return _mock_recommendations(room_type, mood, lighting), True
 
 
-def project_plan(property_type: str, rooms: str, budget: str, timeline: str) -> tuple[str, bool]:
+def project_plan(
+    property_type: str, rooms: str, budget: str, timeline: str
+) -> tuple[list[dict[str, str]], str, bool]:
+    """Returns (steps, summary, mock). Steps are {title, detail} dicts."""
     if not settings.gemini_enabled:
-        return project_plan_mock(property_type, rooms, budget, timeline), True
+        return (*project_plan_mock(property_type, rooms, budget, timeline), True)
+
+    import json
 
     try:
         prompt = (
             "You are a project planner for Kamlesh Paints, an authorised Birla Opus dealer in Pune. "
-            f"Create a concise 5-step painting project plan for a {property_type}, rooms: {rooms}, "
-            f"budget {budget}, timeline {timeline}. Recommend only Birla Opus products. Plain text."
+            f"Create a clear 5-step painting project plan for a {property_type}, rooms: {rooms}, "
+            f"budget {budget}, timeline {timeline}. Recommend only Birla Opus products. "
+            "Respond as JSON only, an object of the form "
+            '{"steps": [{"title": "...", "detail": "..."}], "summary": "..."} with exactly 5 steps. '
+            "Each title is 2-5 words; each detail is one or two plain sentences. "
+            "The summary is one sentence noting how the budget and timeline map to the plan. "
+            "Use plain sentences with no markdown, no asterisks, no hash symbols, no bullet characters."
         )
-        text = _generate_text(prompt).strip()
-        if text:
-            return text, False
+        text = _generate_text(prompt).strip().removeprefix("```json").removesuffix("```").strip()
+        parsed = json.loads(text)
+        steps = [
+            {"title": _clean(s["title"]), "detail": _clean(s["detail"])}
+            for s in parsed.get("steps", [])[:5]
+        ]
+        summary = _clean(parsed.get("summary", ""))
+        if steps:
+            return steps, summary, False
         raise ValueError("empty plan")
-    except Exception as exc:  # noqa: BLE001 — any Gemini failure falls back to the mock plan
+    except Exception as exc:  # noqa: BLE001 — any Gemini/parse failure falls back to the mock plan
         logger.warning("Gemini project_plan failed, using mock: %s", exc)
-        return project_plan_mock(property_type, rooms, budget, timeline), True
+        return (*project_plan_mock(property_type, rooms, budget, timeline), True)
 
 
-def project_plan_mock(property_type: str, rooms: str, budget: str, timeline: str) -> str:
-    return (
-        f"Project plan for your {property_type} ({rooms}), budget {budget}, timeline {timeline}:\n\n"
-        "1. Free site survey — our expert visits, measures every wall, and checks for dampness.\n"
-        "2. Surface prep — Alldry Wall Fix 4 primer on any damp or cracked walls.\n"
-        "3. Colour selection — shortlist Birla Opus shades per room with our consultant.\n"
-        "4. Painting — 2 coats of your chosen grade (Style / Calista / One) with our partner painters.\n"
-        "5. Handover — final inspection and a written warranty for applicable products.\n\n"
-        "Book a free site survey to turn this into an exact written quote."
+def project_plan_mock(
+    property_type: str, rooms: str, budget: str, timeline: str
+) -> tuple[list[dict[str, str]], str]:
+    steps = [
+        {
+            "title": "Free site survey",
+            "detail": "Our expert visits, measures every wall, and checks for dampness or cracks.",
+        },
+        {
+            "title": "Surface preparation",
+            "detail": "Alldry Wall Fix primer on any damp or cracked walls for a lasting finish.",
+        },
+        {
+            "title": "Colour selection",
+            "detail": f"Shortlist Birla Opus shades for {rooms} with our in-store consultant.",
+        },
+        {
+            "title": "Painting",
+            "detail": "Two coats of your chosen grade (Style, Calista, or One) by our partner painters.",
+        },
+        {
+            "title": "Handover and warranty",
+            "detail": "Final inspection and a written warranty for applicable products.",
+        },
+    ]
+    summary = (
+        f"For your {property_type} ({rooms}), a {budget} budget over {timeline} covers "
+        "prep, two premium Birla Opus coats, and labour."
     )
+    return steps, summary

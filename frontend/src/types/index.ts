@@ -10,7 +10,13 @@ export interface Category {
   sort_order: number;
 }
 
-export type ProductTab = "interior" | "exterior" | "waterproofing" | "wood" | "tools";
+export type ProductTab =
+  | "interior"
+  | "exterior"
+  | "waterproofing"
+  | "wood"
+  | "tools"
+  | "hardware";
 
 export interface Variant {
   label: string;
@@ -96,8 +102,14 @@ export interface ColourRecommendResponse {
   mock: boolean;
 }
 
+export interface PlanStep {
+  title: string;
+  detail: string;
+}
+
 export interface ProjectPlanResponse {
-  plan: string;
+  steps: PlanStep[];
+  summary: string;
   mock: boolean;
 }
 

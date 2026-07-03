@@ -114,9 +114,26 @@ export function ProjectPlanner() {
               Showing a sample plan — connect a valid Gemini API key for a live AI-generated plan.
             </p>
           )}
-          <p className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-ink">
-            {mutation.data.plan}
-          </p>
+          <ol className="space-y-4">
+            {mutation.data.steps.map((step, i) => (
+              <li key={i} className="flex gap-4">
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange/10 font-display text-[15px] font-bold text-orange-deep">
+                  {i + 1}
+                </span>
+                <div>
+                  <p className="font-display text-[16px] font-bold text-ink">{step.title}</p>
+                  <p className="mt-1 font-sans text-sm leading-relaxed text-ink-soft">
+                    {step.detail}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          {mutation.data.summary && (
+            <p className="mt-6 rounded-xl bg-marigold-soft/40 px-5 py-4 font-sans text-sm leading-relaxed text-ink">
+              {mutation.data.summary}
+            </p>
+          )}
         </div>
       )}
       {mutation.isError && (

@@ -5,6 +5,7 @@ from app.schemas.ai import (
     CalculateResponse,
     ColourRecommendRequest,
     ColourRecommendResponse,
+    PlanStep,
     ProjectPlanRequest,
     ProjectPlanResponse,
     RecommendedColour,
@@ -31,7 +32,9 @@ def recommend(payload: ColourRecommendRequest) -> ColourRecommendResponse:
 
 @router.post("/project-plan", response_model=ProjectPlanResponse)
 def plan(payload: ProjectPlanRequest) -> ProjectPlanResponse:
-    text, mock = project_plan(
+    steps, summary, mock = project_plan(
         payload.property_type, payload.rooms, payload.budget, payload.timeline
     )
-    return ProjectPlanResponse(plan=text, mock=mock)
+    return ProjectPlanResponse(
+        steps=[PlanStep(**s) for s in steps], summary=summary, mock=mock
+    )

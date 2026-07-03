@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
+import { Heart } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -11,6 +12,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { apiGet } from "@/lib/api";
 import { SUB_BRAND_ACCENTS } from "@/lib/constants";
 import { cn, priceRange } from "@/lib/utils";
+import { useWishlistStore } from "@/store/wishlistStore";
 import { useUiStore } from "@/store/uiStore";
 import type { Product, ProductList } from "@/types";
 
@@ -47,9 +49,22 @@ export function ProductImage({
 
 function ShowcaseCard({ product }: { product: Product }) {
   const accent = SUB_BRAND_ACCENTS[product.sub_brand] ?? "#C9A876";
+  const wished = useWishlistStore((s) => s.productIds.includes(product.id));
+  const toggleWish = useWishlistStore((s) => s.toggle);
 
   return (
-    <div className="group cursor-pointer rounded-2xl border border-ink/[0.07] bg-paper p-6 shadow-card-warm transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1.5 hover:border-orange/30 hover:shadow-card-lift">
+    <div className="group relative cursor-pointer rounded-2xl border border-ink/[0.07] bg-paper p-6 shadow-card-warm transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1.5 hover:border-orange/30 hover:shadow-card-lift">
+      <button
+        type="button"
+        aria-label={wished ? "Remove from favourites" : "Add to favourites"}
+        onClick={() => toggleWish(product.id)}
+        className={cn(
+          "absolute right-5 top-5 z-[1] transition-colors duration-200",
+          wished ? "text-coral" : "text-ink-soft hover:text-ink",
+        )}
+      >
+        <Heart size={18} fill={wished ? "currentColor" : "none"} />
+      </button>
       <div className="flex gap-6">
         <div className="flex w-24 shrink-0 items-start justify-center transition-transform duration-300 group-hover:-translate-y-2 group-hover:scale-[1.06]">
           <ProductImage product={product} className="h-[110px] w-24" />

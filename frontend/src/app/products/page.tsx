@@ -1,16 +1,34 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 
 import { ProductFilters, type Filters } from "@/components/products/ProductFilters";
 import { ProductGrid } from "@/components/products/ProductGrid";
 import { Reveal } from "@/components/ui/Reveal";
 import { apiGet } from "@/lib/api";
-import type { ProductList } from "@/types";
+import type { ProductList, ProductTab } from "@/types";
 
-export default function ProductsPage() {
-  const [filters, setFilters] = useState<Filters>({ tab: "all", subBrand: "", search: "" });
+const VALID_TABS: (ProductTab | "all")[] = [
+  "all",
+  "interior",
+  "exterior",
+  "waterproofing",
+  "wood",
+  "tools",
+  "hardware",
+];
+
+function ProductsBrowser() {
+  // Deep-link support: /products?tab=hardware pre-selects that filter.
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get("tab") as ProductTab | "all" | null;
+  const [filters, setFilters] = useState<Filters>({
+    tab: initialTab && VALID_TABS.includes(initialTab) ? initialTab : "all",
+    subBrand: "",
+    search: "",
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["products"],
@@ -35,8 +53,8 @@ export default function ProductsPage() {
           in stock<span className="text-orange">.</span>
         </h1>
         <p className="mt-6 max-w-[420px] font-sans text-body text-ink-soft">
-          The complete Birla Opus catalogue — paints, waterproofing, wood finishes, and tools —
-          ready for delivery across Pune.
+          The complete Birla Opus catalogue — paints, waterproofing, wood finishes, tools, and
+          hardware — ready for delivery across Pune.
         </p>
       </Reveal>
 
@@ -52,5 +70,13 @@ export default function ProductsPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-cream" />}>
+      <ProductsBrowser />
+    </Suspense>
   );
 }

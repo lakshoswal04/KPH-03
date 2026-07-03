@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400" fill="none">
+  <rect width="400" height="400" fill="#FFF5F0"/>
+  <g stroke="#E8590C" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M186 96 h28 v22 l12 14 v104 a10 10 0 0 1 -10 10 h-44 a10 10 0 0 1 -10 -10 v-104 l12 -14 z" fill="#E8590C" fill-opacity="0.14"/>
+    <path d="M186 96 h28 v22 l12 14 v104 a10 10 0 0 1 -10 10 h-44 a10 10 0 0 1 -10 -10 v-104 l12 -14 z"/>
+    <path d="M162 180 h56"/>
+  </g>
+  <text x="200" y="360" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" fill="#E8590C">Thinner</text>
+</svg>

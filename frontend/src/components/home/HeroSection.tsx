@@ -19,10 +19,10 @@ const HERO_SWATCHES = [
 ];
 
 const CATEGORY_PANELS = [
-  { name: "Interior Paints", bg: "#F5C518", canBody: "#C79E0D" },
-  { name: "Exterior Paints", bg: "#0ABFBC", canBody: "#088F8D" },
-  { name: "Waterproofing", bg: "#FF4D6D", canBody: "#D63755" },
-  { name: "Hardware", bg: "#7B2FBE", canBody: "#5C2390" },
+  { name: "Interior Paints", tab: "interior", bg: "#F5C518", canBody: "#C79E0D" },
+  { name: "Exterior Paints", tab: "exterior", bg: "#0ABFBC", canBody: "#088F8D" },
+  { name: "Waterproofing", tab: "waterproofing", bg: "#FF4D6D", canBody: "#D63755" },
+  { name: "Hardware", tab: "hardware", bg: "#7B2FBE", canBody: "#5C2390" },
 ];
 
 const STATS = [
@@ -230,7 +230,7 @@ export function HeroSection() {
         {CATEGORY_PANELS.map((panel) => (
           <Link
             key={panel.name}
-            href="/products"
+            href={`/products?tab=${panel.tab}`}
             className="group relative flex h-[150px] flex-col items-center justify-center pt-5 transition-[filter] duration-300 hover:brightness-[0.92] lg:h-full"
             style={{ background: panel.bg, overflow: "visible" }}
           >

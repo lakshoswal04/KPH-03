@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400" fill="none">
+  <rect width="400" height="400" fill="#EFF6FF"/>
+  <g stroke="#2F6FB5" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M120 138 h160 v56 h-52 v44 h-56 v-44 h-52 z" fill="#2F6FB5" fill-opacity="0.16"/>
+    <path d="M120 138 h160 v56 h-52 v44 h-56 v-44 h-52 z"/>
+  </g>
+  <text x="200" y="360" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" fill="#2F6FB5">Pipe Tee</text>
+</svg>

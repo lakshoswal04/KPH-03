@@ -18,9 +18,10 @@ const TAB_OPTIONS: { id: Filters["tab"]; label: string }[] = [
   { id: "waterproofing", label: "Waterproofing" },
   { id: "wood", label: "Wood Finishes" },
   { id: "tools", label: "Tools" },
+  { id: "hardware", label: "Hardware" },
 ];
 
-const SUB_BRANDS = ["ONE", "CALISTA", "STYLE", "ALLDRY", "ALLWOOD", "KAMLESH"];
+const SUB_BRANDS = ["ONE", "CALISTA", "STYLE", "ALLDRY", "ALLWOOD", "TOOLS", "HARDWARE"];
 
 export function ProductFilters({
   filters,

@@ -13,6 +13,7 @@ CATEGORIES = [
     ("enamels", "Enamels", "🔩", "High-gloss enamels for metal doors, grills, and furniture.", "#7B2FBE", "#F8F5FF", "12 products"),
     ("wood-finishes", "Wood Finishes", "🪵", "Allwood PU, melamine, and stain finishes for all wooden surfaces.", "#F5C518", "#FFFBF0", "14 products"),
     ("tools", "Tools", "🖌️", "Rollers, brushes, sandpaper, solvents, and surface-prep tools.", "#E8590C", "#FFF5F0", "7 products"),
+    ("hardware", "Hardware", "🔧", "UPVC, CPVC, and PVC pipes with sockets, tees, elbows, and fittings.", "#2F6FB5", "#EFF6FF", "9 products"),
 ]
 
 # Categories removed from the catalogue — deleted (with their products) on reseed.
@@ -103,6 +104,47 @@ TOOL_PRODUCTS = [
      [("2 inch", 70), ("3 inch", 90), ("4 inch", 110), ("6 inch", 150), ("8 inch", 190)]),
 ]
 
+# Plumbing hardware products — UPVC/CPVC/PVC pipes and fittings, sized by
+# nominal diameter. Same shape as TOOL_PRODUCTS: (name, description, features, variants).
+HARDWARE_PRODUCTS = [
+    ("CPVC Pipe",
+     "CPVC pipe for hot and cold potable water plumbing — handles high temperatures and pressure. Sold per 3-metre length.",
+     ["Hot & Cold Water", "High Pressure", "Corrosion-Free", "3m Length"],
+     [("1/2 inch", 120), ("3/4 inch", 170), ("1 inch", 240)]),
+    ("UPVC Pipe",
+     "UPVC pipe for cold water supply and drainage lines — tough, leak-proof, and rust-free. Sold per 3-metre length.",
+     ["Cold Water", "Leak-Proof", "Rust-Free", "3m Length"],
+     [("3/4 inch", 90), ("1 inch", 130), ("1.5 inch", 210), ("2 inch", 320)]),
+    ("PVC Pipe",
+     "PVC pipe for drainage, waste, and agricultural water lines — lightweight and easy to install. Sold per 3-metre length.",
+     ["Drainage & Agri", "Lightweight", "Durable", "3m Length"],
+     [("1 inch", 70), ("1.5 inch", 110), ("2 inch", 180), ("3 inch", 300)]),
+    ("Pipe Elbow",
+     "90-degree elbow fitting to turn a pipe run around corners. Solvent-weld socket ends for a tight, leak-free joint.",
+     ["Changes Direction", "90 Degree", "Solvent-Weld", "Leak-Free"],
+     [("1/2 inch", 10), ("3/4 inch", 15), ("1 inch", 25), ("1.5 inch", 45), ("2 inch", 70)]),
+    ("Pipe Tee",
+     "Tee fitting to branch one pipe line into two — distributes water to multiple outlets.",
+     ["Branch Connection", "Three-Way", "Solvent-Weld", "Leak-Free"],
+     [("1/2 inch", 12), ("3/4 inch", 18), ("1 inch", 30), ("1.5 inch", 55), ("2 inch", 85)]),
+    ("Pipe Coupler",
+     "Coupler (socket) to join two pipes of the same diameter and extend a run.",
+     ["Joins Pipes", "Same Diameter", "Solvent-Weld", "Leak-Free"],
+     [("1/2 inch", 8), ("3/4 inch", 12), ("1 inch", 20), ("1.5 inch", 38), ("2 inch", 60)]),
+    ("End Cap",
+     "End cap to seal the end of a pipe and stop flow — prevents leaks and keeps lines clean.",
+     ["Seals Pipe End", "Stops Flow", "Solvent-Weld", "Watertight"],
+     [("1/2 inch", 6), ("3/4 inch", 9), ("1 inch", 14), ("1.5 inch", 28), ("2 inch", 45)]),
+    ("Ball Valve",
+     "Quarter-turn ball valve to shut off or control water flow in a line — smooth handle operation.",
+     ["Shut-Off Control", "Quarter-Turn", "Full Bore", "Durable Handle"],
+     [("1/2 inch", 90), ("3/4 inch", 130), ("1 inch", 190)]),
+    ("Solvent Cement",
+     "Solvent cement adhesive for permanent, watertight solvent-weld joints on UPVC/CPVC/PVC pipes and fittings.",
+     ["Watertight Joints", "Fast-Setting", "Strong Bond", "For All PVC"],
+     [("50 ml", 40), ("100 ml", 70), ("250 ml", 150)]),
+]
+
 # The 14 hero/explorer shades from the PRD (is_explorer_shade=True), in spec order.
 EXPLORER_SHADES = [
     ("Off White", "#F5F0E8", "Whites"),
@@ -166,9 +208,24 @@ IMAGE_MAP = {
     "allwood-italian-pu": "/products/allwood-italian-pu.png",
     "allwood-melamine": "/products/allwood-melamine.png",
     "allwood-wood-stain": "/products/allwood-wood-stain.png",
-    # Tool products have no local packshot yet — the frontend renders a labelled
-    # placeholder for a null image_url. Drop real files into
-    # frontend/public/products/tools/<slug>.png and add them here to wire them.
+    # Tools — on-brand catalogue tiles (replace with real product photos later).
+    "paint-roller": "/products/tools/paint-roller.svg",
+    "paint-brush": "/products/tools/paint-brush.svg",
+    "turpentine-oil": "/products/tools/turpentine-oil.svg",
+    "thinner": "/products/tools/thinner.svg",
+    "sandpaper": "/products/tools/sandpaper.svg",
+    "waterpaper": "/products/tools/waterpaper.svg",
+    "metal-scraper": "/products/tools/metal-scraper.svg",
+    # Hardware — on-brand catalogue tiles.
+    "cpvc-pipe": "/products/hardware/cpvc-pipe.svg",
+    "upvc-pipe": "/products/hardware/upvc-pipe.svg",
+    "pvc-pipe": "/products/hardware/pvc-pipe.svg",
+    "pipe-elbow": "/products/hardware/pipe-elbow.svg",
+    "pipe-tee": "/products/hardware/pipe-tee.svg",
+    "pipe-coupler": "/products/hardware/pipe-coupler.svg",
+    "end-cap": "/products/hardware/end-cap.svg",
+    "ball-valve": "/products/hardware/ball-valve.svg",
+    "solvent-cement": "/products/hardware/solvent-cement.svg",
 }
 
 FAMILY_ORDER = [
@@ -191,11 +248,17 @@ def paint_variants(price_low: int, unit: str) -> list[dict]:
     return out
 
 
+# Slug → explicit size variants, for tools and hardware (paints are computed).
+EXPLICIT_VARIANTS = {
+    slugify(name): [{"label": label, "price": price} for label, price in variants]
+    for name, _desc, _features, variants in TOOL_PRODUCTS + HARDWARE_PRODUCTS
+}
+
+
 def compute_variants(product: Product) -> list[dict]:
-    """Tools carry explicit variants; paints get computed pack sizes."""
-    for name, _desc, _features, variants in TOOL_PRODUCTS:
-        if product.slug == slugify(name):
-            return [{"label": label, "price": price} for label, price in variants]
+    """Tools and hardware carry explicit variants; paints get computed pack sizes."""
+    if product.slug in EXPLICIT_VARIANTS:
+        return EXPLICIT_VARIANTS[product.slug]
     return paint_variants(product.price_low, product.price_unit)
 
 
@@ -239,23 +302,28 @@ def main() -> None:
             ))
             added += 1
 
-        # Tool products.
-        for name, desc, features, variants in TOOL_PRODUCTS:
-            if slugify(name) in existing_slugs:
-                continue
-            prices = [p for _, p in variants]
-            db.add(Product(
-                slug=slugify(name), name=name, sub_brand="KAMLESH", tab="tools",
-                description=desc, features=features,
-                price_low=min(prices), price_high=max(prices),
-                price_unit="unit", category_id=cat_by_slug.get("tools"), image_url=None,
-            ))
-            added += 1
+        # Tool + hardware products (explicit size variants; sub_brand == display chip).
+        for products, sub_brand, tab, cat_slug in (
+            (TOOL_PRODUCTS, "TOOLS", "tools", "tools"),
+            (HARDWARE_PRODUCTS, "HARDWARE", "hardware", "hardware"),
+        ):
+            for name, desc, features, variants in products:
+                if slugify(name) in existing_slugs:
+                    continue
+                prices = [p for _, p in variants]
+                db.add(Product(
+                    slug=slugify(name), name=name, sub_brand=sub_brand, tab=tab,
+                    description=desc, features=features,
+                    price_low=min(prices), price_high=max(prices),
+                    price_unit="unit", category_id=cat_by_slug.get(cat_slug), image_url=None,
+                ))
+                added += 1
         if added:
             db.commit()
             print(f"Added {added} new products")
 
-        # Images + variants — refresh on every run.
+        # Images + variants + tool/hardware sub_brand — refresh on every run.
+        SUB_BRAND_BY_TAB = {"tools": "TOOLS", "hardware": "HARDWARE"}
         updated = 0
         for product in db.query(Product).all():
             image_url = IMAGE_MAP.get(product.slug)  # None for tools → labelled placeholder
@@ -265,6 +333,11 @@ def main() -> None:
             variants = compute_variants(product)
             if product.variants != variants:
                 product.variants = variants
+                updated += 1
+            # Retire the old "KAMLESH" tool brand; keep tools/hardware chips correct.
+            wanted_brand = SUB_BRAND_BY_TAB.get(product.tab)
+            if wanted_brand and product.sub_brand != wanted_brand:
+                product.sub_brand = wanted_brand
                 updated += 1
         if updated:
             db.commit()
