@@ -7,5 +7,8 @@ export function formatINR(amount: number): string {
 }
 
 export function priceRange(low: number, high: number, unit: string): string {
+  // Hardware/tools priced per pack use unit "unit" — show a "From" price instead
+  // of an awkward "/ unit" suffix.
+  if (unit === "unit") return `From ₹${formatINR(low)}`;
   return `₹${formatINR(low)} – ₹${formatINR(high)} / ${unit}`;
 }

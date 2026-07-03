@@ -5,12 +5,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { Reveal } from "@/components/ui/Reveal";
-import { useCart } from "@/hooks/useCart";
+import { lineUnitPrice, useCart } from "@/hooks/useCart";
 import { SUB_BRAND_ACCENTS } from "@/lib/constants";
 import { formatINR } from "@/lib/utils";
 
 export default function CartPage() {
-  const { items, remove, setQuantity, total } = useCart();
+  const { items, remove, setQuantity, total, keyOf } = useCart();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -38,11 +38,14 @@ export default function CartPage() {
       ) : (
         <div className="mt-12 grid grid-cols-1 gap-12 lg:grid-cols-[1fr_360px]">
           <div className="space-y-4">
-            {items.map(({ product, quantity }) => {
+            {items.map((item) => {
+              const { product, quantity, variant } = item;
+              const key = keyOf(item);
+              const unit = lineUnitPrice(item);
               const accent = SUB_BRAND_ACCENTS[product.sub_brand] ?? "#C9A876";
               return (
                 <div
-                  key={product.id}
+                  key={key}
                   className="flex items-center gap-5 rounded-xl border border-ink/5 bg-paper shadow-card-warm p-5"
                 >
                   {product.image_url ? (
@@ -74,14 +77,14 @@ export default function CartPage() {
                       {product.name}
                     </Link>
                     <p className="font-sans text-[13px] text-ink-soft">
-                      ₹{formatINR(product.price_low)} / {product.price_unit}
+                      {variant ? `${variant.label} · ` : ""}₹{formatINR(unit)} each
                     </p>
                   </div>
                   <div className="flex items-center rounded-btn border border-ink/15">
                     <button
                       type="button"
                       aria-label="Decrease quantity"
-                      onClick={() => setQuantity(product.id, quantity - 1)}
+                      onClick={() => setQuantity(key, quantity - 1)}
                       className="px-3 py-2 font-sans text-ink transition-colors hover:text-orange"
                     >
                       −
@@ -92,19 +95,19 @@ export default function CartPage() {
                     <button
                       type="button"
                       aria-label="Increase quantity"
-                      onClick={() => setQuantity(product.id, quantity + 1)}
+                      onClick={() => setQuantity(key, quantity + 1)}
                       className="px-3 py-2 font-sans text-ink transition-colors hover:text-orange"
                     >
                       +
                     </button>
                   </div>
                   <p className="w-24 text-right font-sans text-base font-semibold text-orange-deep">
-                    ₹{formatINR(product.price_low * quantity)}
+                    ₹{formatINR(unit * quantity)}
                   </p>
                   <button
                     type="button"
                     aria-label={`Remove ${product.name}`}
-                    onClick={() => remove(product.id)}
+                    onClick={() => remove(key)}
                     className="text-ink-soft transition-colors hover:text-coral"
                   >
                     <Trash2 size={17} />

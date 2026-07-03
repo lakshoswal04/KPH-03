@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { ColourRecommender } from "@/components/ai/ColourRecommender";
+import { ProjectPlanner } from "@/components/ai/ProjectPlanner";
 import { PaintCalculator } from "@/components/home/PaintCalculator";
 import { FloatingBucket, PaintBrush } from "@/components/ui/FloatingProps";
 import { Reveal } from "@/components/ui/Reveal";
@@ -33,15 +34,16 @@ export default function AiStudioPage() {
             paint once<span className="text-orange">.</span>
           </h1>
           <p className="mt-6 max-w-[440px] font-sans text-body text-ink-soft">
-            Two tools, zero guesswork — know exactly how much paint your project needs, and let AI
-            shortlist Birla Opus shades for every room.
+            Three tools, zero guesswork — estimate exactly how much paint your project needs, let AI
+            shortlist Birla Opus shades, and get a step-by-step project plan.
           </p>
         </Reveal>
       </section>
 
       <section className="px-6 pb-10 md:px-section-x">
-        <div className="mx-auto max-w-[760px]">
+        <div className="mx-auto grid max-w-[1100px] gap-8 lg:grid-cols-2">
           <ColourRecommender />
+          <ProjectPlanner />
         </div>
       </section>
 

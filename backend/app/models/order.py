@@ -32,6 +32,7 @@ class OrderItem(Base):
     order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"), index=True)
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
     product_name: Mapped[str] = mapped_column(String(120))
+    variant_label: Mapped[str | None] = mapped_column(String(40), nullable=True)
     quantity: Mapped[int] = mapped_column(Integer, default=1)
     unit_price: Mapped[int] = mapped_column(Integer)  # rupees
 

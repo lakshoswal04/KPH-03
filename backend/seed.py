@@ -1,5 +1,7 @@
-"""Seed the catalogue: 8 categories, 16 products, colour catalogue.
-Idempotent — skips any table that already has rows. Run: python seed.py"""
+"""Seed/reconcile the catalogue: categories, paint + tool products (with pack
+size variants), and the colour catalogue. Fully idempotent — safe to re-run;
+upserts categories, removes retired ones, adds missing products, refreshes
+images and variants. Run: python seed.py"""
 
 from app.core.database import SessionLocal
 from app.models import Category, Colour, Product
@@ -10,10 +12,11 @@ CATEGORIES = [
     ("waterproofing", "Waterproofing", "💧", "Alldry solutions for damp walls, leaking roofs, and monsoon damage.", "#FF4D6D", "#FFF0F3", "18 products"),
     ("enamels", "Enamels", "🔩", "High-gloss enamels for metal doors, grills, and furniture.", "#7B2FBE", "#F8F5FF", "12 products"),
     ("wood-finishes", "Wood Finishes", "🪵", "Allwood PU, melamine, and stain finishes for all wooden surfaces.", "#F5C518", "#FFFBF0", "14 products"),
-    ("wallpapers", "Wallpapers", "🖼️", "Designer wallpapers in textured, printed, and geometric patterns.", "#2DD4A0", "#F0FFF8", "32 designs"),
-    ("tools", "Tools", "🖌️", "Foam rollers, cloud rollers, brushes, and trays from Birla Opus.", "#E8590C", "#FFF5F0", "8 products"),
-    ("aerosols", "Aerosols", "💨", "One Aero premium spray cans for touch-ups and decorative work.", "#9B5FE8", "#F5F0FF", "6 products"),
+    ("tools", "Tools", "🖌️", "Rollers, brushes, sandpaper, solvents, and surface-prep tools.", "#E8590C", "#FFF5F0", "7 products"),
 ]
+
+# Categories removed from the catalogue — deleted (with their products) on reseed.
+REMOVED_CATEGORY_SLUGS = ["wallpapers", "aerosols"]
 
 # (tab, category_slug, sub_brand, name, description, features, price_low, price_high, unit)
 PRODUCTS = [
@@ -65,6 +68,39 @@ PRODUCTS = [
     ("wood", "wood-finishes", "ALLWOOD", "Allwood Wood Stain",
      "Translucent stain that enhances natural wood grain while adding a rich tinted colour.",
      ["Translucent", "Grain-Enhancing", "Multiple Shades", "Indoor & Outdoor"], 280, 380, "L"),
+]
+
+# Hardware/tools products. Each carries explicit size variants (label, price ₹).
+# (name, description, features, variants)
+TOOL_PRODUCTS = [
+    ("Paint Roller",
+     "Foam and knit rollers for smooth, fast coverage on interior and exterior walls.",
+     ["Smooth Finish", "Reusable", "Low-Splatter", "Fast Coverage"],
+     [("2 inch", 60), ("4 inch", 90), ("6 inch", 130), ("8 inch", 170)]),
+    ("Paint Brush",
+     "Soft-bristle brushes for cutting-in, edges, trims, and detailed enamel work.",
+     ["Soft Bristle", "No Shedding", "Fine Edges", "Durable"],
+     [("1 inch", 40), ("2 inch", 70), ("3 inch", 110), ("4 inch", 150)]),
+    ("Turpentine Oil",
+     "Mineral turpentine to thin oil-based enamels and wood finishes — improves flow and speeds drying. Use in well-ventilated areas.",
+     ["Thins Enamels", "Improves Flow", "Brush Cleaner", "Oil-Based Only"],
+     [("500 ml", 90), ("1 litre", 160)]),
+    ("Thinner",
+     "General-purpose solvent thinner for enamels and PU, and for cleaning brushes, rollers, and spray equipment.",
+     ["All-Purpose", "Fast-Drying", "Equipment Cleaner", "Solvent-Based"],
+     [("500 ml", 80), ("1 litre", 150)]),
+    ("Sandpaper",
+     "Dry sanding sheets for smoothing putty, wood, and old paint before the topcoat — higher number is finer.",
+     ["Dry Sanding", "Wood & Wall", "Assorted Grit", "Long-Lasting"],
+     [("120 grit", 15), ("150 grit", 15), ("220 grit", 20)]),
+    ("Waterpaper",
+     "Waterproof wet-sanding sheets for an ultra-smooth finish between coats on enamels and wood.",
+     ["Wet Sanding", "Waterproof", "Ultra-Smooth", "Between Coats"],
+     [("120 grit", 20), ("150 grit", 25)]),
+    ("Metal Scraper",
+     "Flat metal scraper / putty blade for removing old paint and applying filler during surface prep.",
+     ["Surface Prep", "Rust-Resistant", "Firm Blade", "Comfort Grip"],
+     [("2 inch", 70), ("3 inch", 90), ("4 inch", 110), ("6 inch", 150), ("8 inch", 190)]),
 ]
 
 # The 14 hero/explorer shades from the PRD (is_explorer_shade=True), in spec order.
@@ -130,6 +166,9 @@ IMAGE_MAP = {
     "allwood-italian-pu": "/products/allwood-italian-pu.png",
     "allwood-melamine": "/products/allwood-melamine.png",
     "allwood-wood-stain": "/products/allwood-wood-stain.png",
+    # Tool products have no local packshot yet — the frontend renders a labelled
+    # placeholder for a null image_url. Drop real files into
+    # frontend/public/products/tools/<slug>.png and add them here to wire them.
 }
 
 FAMILY_ORDER = [
@@ -142,43 +181,94 @@ def slugify(name: str) -> str:
     return name.lower().replace(" ", "-")
 
 
+# Bulk discount factors by pack size — bigger packs cost slightly less per unit.
+def paint_variants(price_low: int, unit: str) -> list[dict]:
+    packs = [(1, 1.0), (4, 0.97), (10, 0.94), (20, 0.90)] if unit == "L" else [(1, 1.0), (5, 0.96), (20, 0.90)]
+    out = []
+    for qty, factor in packs:
+        price = round(price_low * qty * factor / 10) * 10
+        out.append({"label": f"{qty} {unit}", "price": price})
+    return out
+
+
+def compute_variants(product: Product) -> list[dict]:
+    """Tools carry explicit variants; paints get computed pack sizes."""
+    for name, _desc, _features, variants in TOOL_PRODUCTS:
+        if product.slug == slugify(name):
+            return [{"label": label, "price": price} for label, price in variants]
+    return paint_variants(product.price_low, product.price_unit)
+
+
 def main() -> None:
     db = SessionLocal()
     try:
-        if db.query(Category).count() == 0:
-            for i, (slug, name, emoji, desc, accent, bg, count_label) in enumerate(CATEGORIES):
+        # Categories — upsert, then drop removed ones (and their products).
+        cat_by_slug = {c.slug: c for c in db.query(Category).all()}
+        for i, (slug, name, emoji, desc, accent, bg, count_label) in enumerate(CATEGORIES):
+            cat = cat_by_slug.get(slug)
+            if cat is None:
                 db.add(Category(
                     slug=slug, name=name, emoji=emoji, description=desc,
                     accent=accent, background=bg, count_label=count_label, sort_order=i,
                 ))
-            db.commit()
-            print(f"Seeded {len(CATEGORIES)} categories")
-        else:
-            print("Categories already seeded — skipping")
+            else:
+                cat.name, cat.emoji, cat.description = name, emoji, desc
+                cat.accent, cat.background, cat.count_label, cat.sort_order = accent, bg, count_label, i
+        db.commit()
 
-        if db.query(Product).count() == 0:
-            cat_by_slug = {c.slug: c.id for c in db.query(Category).all()}
-            for tab, cat_slug, brand, name, desc, features, low, high, unit in PRODUCTS:
-                db.add(Product(
-                    slug=slugify(name), name=name, sub_brand=brand, tab=tab,
-                    description=desc, features=features, price_low=low, price_high=high,
-                    price_unit=unit, category_id=cat_by_slug.get(cat_slug),
-                    image_url=None,
-                ))
+        removed = db.query(Category).filter(Category.slug.in_(REMOVED_CATEGORY_SLUGS)).all()
+        for cat in removed:
+            db.query(Product).filter(Product.category_id == cat.id).delete()
+            db.delete(cat)
+        if removed:
             db.commit()
-            print(f"Seeded {len(PRODUCTS)} products")
-        else:
-            print("Products already seeded — skipping")
+            print(f"Removed categories: {[c.slug for c in removed]}")
 
+        cat_by_slug = {c.slug: c.id for c in db.query(Category).all()}
+
+        # Paint/finish products — insert any missing (idempotent by slug).
+        existing_slugs = {p.slug for p in db.query(Product).all()}
+        added = 0
+        for tab, cat_slug, brand, name, desc, features, low, high, unit in PRODUCTS:
+            if slugify(name) in existing_slugs:
+                continue
+            db.add(Product(
+                slug=slugify(name), name=name, sub_brand=brand, tab=tab,
+                description=desc, features=features, price_low=low, price_high=high,
+                price_unit=unit, category_id=cat_by_slug.get(cat_slug), image_url=None,
+            ))
+            added += 1
+
+        # Tool products.
+        for name, desc, features, variants in TOOL_PRODUCTS:
+            if slugify(name) in existing_slugs:
+                continue
+            prices = [p for _, p in variants]
+            db.add(Product(
+                slug=slugify(name), name=name, sub_brand="KAMLESH", tab="tools",
+                description=desc, features=features,
+                price_low=min(prices), price_high=max(prices),
+                price_unit="unit", category_id=cat_by_slug.get("tools"), image_url=None,
+            ))
+            added += 1
+        if added:
+            db.commit()
+            print(f"Added {added} new products")
+
+        # Images + variants — refresh on every run.
         updated = 0
         for product in db.query(Product).all():
-            image_url = IMAGE_MAP.get(product.slug)
-            if image_url and product.image_url != image_url:
+            image_url = IMAGE_MAP.get(product.slug)  # None for tools → labelled placeholder
+            if product.image_url != image_url:
                 product.image_url = image_url
+                updated += 1
+            variants = compute_variants(product)
+            if product.variants != variants:
+                product.variants = variants
                 updated += 1
         if updated:
             db.commit()
-            print(f"Updated {updated} product images")
+            print(f"Updated {updated} product image/variant fields")
 
         if db.query(Colour).count() == 0:
             order = 0

@@ -15,6 +15,11 @@ class CategoryOut(BaseModel):
     sort_order: int
 
 
+class VariantOut(BaseModel):
+    label: str
+    price: int
+
+
 class ProductOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -28,6 +33,7 @@ class ProductOut(BaseModel):
     price_low: int
     price_high: int
     price_unit: str
+    variants: list[VariantOut]
     image_url: str | None
     category_id: int | None
 

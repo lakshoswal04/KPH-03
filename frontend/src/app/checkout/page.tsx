@@ -9,7 +9,7 @@ import { z } from "zod";
 
 import { Input, Textarea, labelClasses } from "@/components/ui/Input";
 import { Reveal } from "@/components/ui/Reveal";
-import { useCart } from "@/hooks/useCart";
+import { lineUnitPrice, useCart } from "@/hooks/useCart";
 import { apiPost } from "@/lib/api";
 import { formatINR } from "@/lib/utils";
 import type {
@@ -62,7 +62,7 @@ function loadRazorpayScript(): Promise<boolean> {
 }
 
 export default function CheckoutPage() {
-  const { items, total, clear } = useCart();
+  const { items, total, clear, keyOf } = useCart();
   const [paidOrderId, setPaidOrderId] = useState<number | null>(null);
   const [payError, setPayError] = useState<string | null>(null);
 
@@ -87,7 +87,11 @@ export default function CheckoutPage() {
       const payload: OrderCreatePayload = {
         ...values,
         email: values.email || null,
-        items: items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })),
+        items: items.map((i) => ({
+          product_id: i.product.id,
+          quantity: i.quantity,
+          variant_label: i.variant?.label ?? null,
+        })),
       };
       return apiPost<OrderCreatePayload, OrderCreateResponse>("/orders", payload);
     },
@@ -243,13 +247,14 @@ export default function CheckoutPage() {
           <aside className="h-fit rounded-[20px] bg-paper shadow-card-lift p-8 lg:sticky lg:top-[100px]">
             <h2 className="font-display text-2xl font-bold text-ink">Your items</h2>
             <div className="mt-6 space-y-3 border-b border-ink/10 pb-6">
-              {items.map(({ product, quantity }) => (
-                <div key={product.id} className="flex justify-between gap-4 font-sans text-sm">
+              {items.map((item) => (
+                <div key={keyOf(item)} className="flex justify-between gap-4 font-sans text-sm">
                   <span className="text-ink-soft">
-                    {product.name} × {quantity}
+                    {item.product.name}
+                    {item.variant ? ` (${item.variant.label})` : ""} × {item.quantity}
                   </span>
                   <span className="shrink-0 text-ink">
-                    ₹{formatINR(product.price_low * quantity)}
+                    ₹{formatINR(lineUnitPrice(item) * item.quantity)}
                   </span>
                 </div>
               ))}

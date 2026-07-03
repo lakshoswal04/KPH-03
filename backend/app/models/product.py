@@ -17,6 +17,8 @@ class Product(Base):
     price_low: Mapped[int] = mapped_column(Integer)
     price_high: Mapped[int] = mapped_column(Integer)
     price_unit: Mapped[str] = mapped_column(String(10), default="L")
+    # Purchasable pack/size options: list of {"label": str, "price": int}.
+    variants: Mapped[list] = mapped_column(JSON, default=list)
     image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     category_id: Mapped[int | None] = mapped_column(
         ForeignKey("categories.id"), nullable=True, index=True

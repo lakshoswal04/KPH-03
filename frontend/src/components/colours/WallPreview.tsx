@@ -1,82 +1,84 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
 import { useReducedMotion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-// Shades dark enough that the sofa silhouette must dim to stay readable.
-const DARK_WALLS = ["#4A4A5A", "#1A1A2E"];
+// living-room.jpg is a large plain wall (upper ~58%) above a sofa with cushions.
+// This mask paints the full wall so any shade — pale or bold — reads clearly,
+// then fades out just above the cushions so the sofa keeps its natural colour.
+const WALL_MASK =
+  "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 53%, rgba(0,0,0,0) 60%)";
 
-/** CSS-drawn living room whose wall repaints with a brush-stroke wipe.
- * Drive it by passing the currently selected shade hex. */
+function tintLayer(colour: string, extra: React.CSSProperties = {}): React.CSSProperties {
+  return {
+    background: colour,
+    mixBlendMode: "multiply",
+    WebkitMaskImage: WALL_MASK,
+    maskImage: WALL_MASK,
+    ...extra,
+  };
+}
+
+/** Realistic room preview: a photo whose wall repaints when a shade is picked,
+ * with the same left-to-right brush wipe on change. */
 export function WallPreview({ colour }: { colour: string }) {
   const [current, setCurrent] = useState(colour);
   const [wipe, setWipe] = useState<{ colour: string; active: boolean } | null>(null);
   const reduced = useReducedMotion();
+  // Always track the newest requested colour so an in-flight wipe can retarget
+  // and never leaves the preview frozen on a stale shade when shades are clicked
+  // in quick succession.
+  const latest = useRef(colour);
 
   useEffect(() => {
-    if (colour === current || wipe) return;
+    latest.current = colour;
+    if (colour === current) return;
     if (reduced) {
       setCurrent(colour);
+      setWipe(null);
       return;
     }
+    // (Re)start the wipe toward the newest colour, interrupting any in progress.
     setWipe({ colour, active: false });
     const raf = requestAnimationFrame(() =>
-      requestAnimationFrame(() => setWipe({ colour, active: true })),
+      requestAnimationFrame(() => {
+        if (latest.current === colour) setWipe({ colour, active: true });
+      }),
     );
     return () => cancelAnimationFrame(raf);
-  }, [colour, current, wipe, reduced]);
+  }, [colour, current, reduced]);
 
   const onWipeEnd = () => {
-    if (!wipe) return;
-    setCurrent(wipe.colour);
+    // Commit whatever the newest colour is (the wipe may have been retargeted).
+    setCurrent(latest.current);
     setWipe(null);
   };
 
-  const isDark = DARK_WALLS.includes(wipe?.active ? wipe.colour : current);
-
   return (
-    <div
-      className="relative h-[360px] w-full overflow-hidden rounded-[20px]"
-      style={{ background: current }}
-    >
-      {/* Brush-stroke wipe overlay */}
+    <div className="relative h-[360px] w-full overflow-hidden rounded-[16px]">
+      <img
+        src="/room/living-room.jpg"
+        alt="Living room preview"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      {/* Current wall tint */}
+      <div className="absolute inset-0" style={tintLayer(current)} />
+      {/* Incoming tint, revealed left-to-right */}
       {wipe && (
         <div
-          className="absolute inset-0 z-[5]"
+          className="absolute inset-0"
           onTransitionEnd={onWipeEnd}
-          style={{
-            background: wipe.colour,
+          style={tintLayer(wipe.colour, {
             clipPath: wipe.active ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
             transition: wipe.active ? "clip-path 0.9s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
-          }}
+          })}
         />
       )}
-
-      {/* Room furniture sits above the wipe so only the wall repaints */}
-      <div className="absolute inset-0 z-[6]">
-        {/* Floor */}
-        <div className="absolute bottom-0 left-0 right-0 h-[35%] bg-[rgba(160,130,90,0.6)]" />
-        {/* Window */}
-        <div className="absolute left-[14%] top-[15%] h-[110px] w-20 rounded border-[3px] border-white/50 bg-[rgba(200,230,255,0.4)] before:absolute before:left-0 before:right-0 before:top-1/2 before:h-[3px] before:bg-white/50 after:absolute after:bottom-0 after:left-1/2 after:top-0 after:w-[3px] after:bg-white/50" />
-        {/* Sofa */}
-        <div
-          className="absolute bottom-[35%] left-1/2 -translate-x-1/2 transition-opacity duration-500"
-          style={{ opacity: isDark ? 0.35 : 1 }}
-        >
-          <div className="mx-auto h-[30px] w-[180px] rounded-t-xl bg-[#3A2A1E]" />
-          <div className="h-[70px] w-[220px] rounded-t-xl bg-[#3A2A1E]" />
-        </div>
-        {/* Plants */}
-        <div className="absolute bottom-[35%] left-[12%]">
-          <div className="mx-auto h-8 w-6 rounded-[50%] bg-[#3E5C3A]" />
-          <div className="mx-auto -mt-2 h-8 w-8 rounded-[50%] bg-[#4A6B45]" />
-          <div className="mx-auto h-6 w-3 rounded-b bg-[#7A5C3E]" />
-        </div>
-        <div className="absolute bottom-[35%] right-[12%]">
-          <div className="mx-auto h-10 w-7 rounded-[50%] bg-[#4A6B45]" />
-          <div className="mx-auto h-7 w-4 rounded-b bg-[#7A5C3E]" />
-        </div>
-      </div>
+      {/* Shade label chip */}
+      <span className="absolute bottom-3 left-3 rounded-full bg-white/85 px-3 py-1 font-sans text-[11px] font-semibold text-ink backdrop-blur-sm">
+        Wall preview
+      </span>
     </div>
   );
 }

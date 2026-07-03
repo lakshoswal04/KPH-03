@@ -30,8 +30,21 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db)) -> OrderCr
     if missing:
         raise HTTPException(status_code=400, detail=f"Unknown product ids: {sorted(missing)}")
 
+    def unit_price_for(product: Product, variant_label: str | None) -> int:
+        """Server-authoritative price: resolve the chosen pack from the product's
+        own variants, never from the client. Falls back to base price_low."""
+        if variant_label:
+            for variant in product.variants or []:
+                if variant.get("label") == variant_label:
+                    return int(variant["price"])
+        return product.price_low
+
     # Prices are always taken from the database, never from the client.
-    total = sum(by_id[item.product_id].price_low * item.quantity for item in payload.items)
+    line_prices = {
+        id(item): unit_price_for(by_id[item.product_id], item.variant_label)
+        for item in payload.items
+    }
+    total = sum(line_prices[id(item)] * item.quantity for item in payload.items)
 
     order = Order(
         customer_name=payload.customer_name,
@@ -50,8 +63,9 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db)) -> OrderCr
                 order_id=order.id,
                 product_id=product.id,
                 product_name=product.name,
+                variant_label=item.variant_label,
                 quantity=item.quantity,
-                unit_price=product.price_low,
+                unit_price=line_prices[id(item)],
             )
         )
 

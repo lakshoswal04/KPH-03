@@ -4,15 +4,14 @@ import { Heart } from "lucide-react";
 import Link from "next/link";
 
 import { ProductImage } from "@/components/home/ProductShowcase";
+import { AddToCartButton } from "@/components/ui/AddToCartButton";
 import { Badge } from "@/components/ui/Badge";
-import { useCart } from "@/hooks/useCart";
 import { SUB_BRAND_ACCENTS } from "@/lib/constants";
 import { cn, priceRange } from "@/lib/utils";
 import { useWishlistStore } from "@/store/wishlistStore";
 import type { Product } from "@/types";
 
 export function ProductCard({ product }: { product: Product }) {
-  const { add } = useCart();
   const wished = useWishlistStore((s) => s.productIds.includes(product.id));
   const toggleWish = useWishlistStore((s) => s.toggle);
   const accent = SUB_BRAND_ACCENTS[product.sub_brand] ?? "#C9A876";
@@ -55,13 +54,7 @@ export function ProductCard({ product }: { product: Product }) {
         {priceRange(product.price_low, product.price_high, product.price_unit)}
       </p>
       <div className="mt-4 flex items-center gap-4">
-        <button
-          type="button"
-          onClick={() => add(product)}
-          className="rounded-btn bg-orange px-5 py-2.5 font-sans text-[11px] font-bold uppercase tracking-[1.5px] text-white transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-orange-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange active:translate-y-0"
-        >
-          Add to Cart
-        </button>
+        <AddToCartButton product={product} />
         <Link
           href={`/products/${product.slug}`}
           className="font-sans text-[13px] font-semibold text-orange transition-opacity hover:opacity-75"

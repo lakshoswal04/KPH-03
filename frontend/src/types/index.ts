@@ -10,7 +10,12 @@ export interface Category {
   sort_order: number;
 }
 
-export type ProductTab = "interior" | "exterior" | "waterproofing" | "wood";
+export type ProductTab = "interior" | "exterior" | "waterproofing" | "wood" | "tools";
+
+export interface Variant {
+  label: string;
+  price: number;
+}
 
 export interface Product {
   id: number;
@@ -23,6 +28,7 @@ export interface Product {
   price_low: number;
   price_high: number;
   price_unit: string;
+  variants: Variant[];
   image_url: string | null;
   category_id: number | null;
 }
@@ -98,6 +104,8 @@ export interface ProjectPlanResponse {
 export interface CartItem {
   product: Product;
   quantity: number;
+  /** Selected pack/size; null when the product has no variants. */
+  variant: Variant | null;
 }
 
 export interface OrderCreatePayload {
@@ -105,7 +113,7 @@ export interface OrderCreatePayload {
   phone: string;
   email?: string | null;
   address: string;
-  items: { product_id: number; quantity: number }[];
+  items: { product_id: number; quantity: number; variant_label?: string | null }[];
 }
 
 export interface OrderCreateResponse {
@@ -133,6 +141,7 @@ export interface OrderItem {
   id: number;
   product_id: number;
   product_name: string;
+  variant_label: string | null;
   quantity: number;
   unit_price: number;
 }

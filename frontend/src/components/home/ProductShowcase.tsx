@@ -3,10 +3,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
+import { useState } from "react";
 
+import { AddToCartButton } from "@/components/ui/AddToCartButton";
 import { Badge } from "@/components/ui/Badge";
 import { Reveal } from "@/components/ui/Reveal";
-import { useCart } from "@/hooks/useCart";
 import { apiGet } from "@/lib/api";
 import { SUB_BRAND_ACCENTS } from "@/lib/constants";
 import { cn, priceRange } from "@/lib/utils";
@@ -28,32 +29,23 @@ export function ProductImage({
   className?: string;
 }) {
   const accent = SUB_BRAND_ACCENTS[product.sub_brand] ?? "#C9A876";
-  if (product.image_url) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={product.image_url}
-        alt={`${product.name} bucket`}
-        className={cn("object-contain drop-shadow-lg", className)}
-      />
-    );
-  }
-  // Fallback mini can for any product without an official packshot.
+  // Labelled placeholder for products without a local packshot (e.g. tools),
+  // and the fallback when a real image path fails to load.
+  const placeholder = `https://placehold.co/300x300/${accent.replace("#", "")}/FFFFFF/png?text=${encodeURIComponent(product.name)}`;
+  const [src, setSrc] = useState(product.image_url ?? placeholder);
+
   return (
-    <div className={className}>
-      <div className="mx-auto h-1.5 w-9 rounded-sm bg-ink/20" />
-      <div
-        className="h-full w-full rounded-[6px_6px_14px_14px]"
-        style={{
-          background: `linear-gradient(90deg, rgba(0,0,0,0.25) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.25) 100%), linear-gradient(180deg, ${accent} 0%, color-mix(in srgb, ${accent} 70%, black) 100%)`,
-        }}
-      />
-    </div>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt={product.name}
+      onError={() => src !== placeholder && setSrc(placeholder)}
+      className={cn("object-contain drop-shadow-lg", className)}
+    />
   );
 }
 
 function ShowcaseCard({ product }: { product: Product }) {
-  const { add } = useCart();
   const accent = SUB_BRAND_ACCENTS[product.sub_brand] ?? "#C9A876";
 
   return (
@@ -86,13 +78,7 @@ function ShowcaseCard({ product }: { product: Product }) {
         {priceRange(product.price_low, product.price_high, product.price_unit)}
       </p>
       <div className="mt-4 flex items-center gap-4">
-        <button
-          type="button"
-          onClick={() => add(product)}
-          className="rounded-btn bg-orange px-5 py-2.5 font-sans text-[11px] font-bold uppercase tracking-[1.5px] text-white transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-orange-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange active:translate-y-0"
-        >
-          Add to Cart
-        </button>
+        <AddToCartButton product={product} />
         <Link
           href={`/products/${product.slug}`}
           className="font-sans text-[13px] font-semibold text-orange transition-opacity hover:opacity-75"

@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class OrderItemIn(BaseModel):
     product_id: int
     quantity: int = Field(ge=1, le=500)
+    variant_label: str | None = None
 
 
 class OrderCreate(BaseModel):
@@ -22,6 +23,7 @@ class OrderItemOut(BaseModel):
     id: int
     product_id: int
     product_name: str
+    variant_label: str | None
     quantity: int
     unit_price: int
 

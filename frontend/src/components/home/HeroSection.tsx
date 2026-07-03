@@ -224,8 +224,9 @@ export function HeroSection() {
         </div>
       </div>
 
-      {/* Category panel strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:absolute lg:inset-x-0 lg:bottom-0 lg:h-[180px]">
+      {/* Category panel strip — z-[2] so it sits above the columns' empty
+          bottom padding (which is z-[1]) and stays clickable on desktop. */}
+      <div className="relative z-[2] grid grid-cols-2 md:grid-cols-4 lg:absolute lg:inset-x-0 lg:bottom-0 lg:h-[180px]">
         {CATEGORY_PANELS.map((panel) => (
           <Link
             key={panel.name}

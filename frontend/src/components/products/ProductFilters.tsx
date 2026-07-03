@@ -17,9 +17,10 @@ const TAB_OPTIONS: { id: Filters["tab"]; label: string }[] = [
   { id: "exterior", label: "Exterior Paints" },
   { id: "waterproofing", label: "Waterproofing" },
   { id: "wood", label: "Wood Finishes" },
+  { id: "tools", label: "Tools" },
 ];
 
-const SUB_BRANDS = ["ONE", "CALISTA", "STYLE", "ALLDRY", "ALLWOOD"];
+const SUB_BRANDS = ["ONE", "CALISTA", "STYLE", "ALLDRY", "ALLWOOD", "KAMLESH"];
 
 export function ProductFilters({
   filters,

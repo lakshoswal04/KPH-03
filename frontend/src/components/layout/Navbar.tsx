@@ -97,9 +97,15 @@ export function Navbar() {
             </Link>
             <Link href="/cart" aria-label="Cart" className="relative transition-opacity hover:opacity-70">
               <ShoppingCart size={18} strokeWidth={2} />
-              <span className="absolute -right-2.5 -top-2.5 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-orange font-sans text-[10px] font-bold text-white">
+              <motion.span
+                key={mounted ? count : 0}
+                initial={{ scale: 1 }}
+                animate={{ scale: [1, 1.4, 1] }}
+                transition={{ duration: 0.35 }}
+                className="absolute -right-2.5 -top-2.5 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-orange font-sans text-[10px] font-bold text-white"
+              >
                 {mounted ? count : 0}
-              </span>
+              </motion.span>
             </Link>
             <Link
               href="/#calculator"
