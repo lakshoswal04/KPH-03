@@ -105,12 +105,12 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* Launcher — stacked above the WhatsApp button on the LEFT */}
+      {/* Launcher */}
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? "Close chat" : "Chat with us"}
-        className="group fixed bottom-[96px] right-8 z-[91] flex h-[58px] w-[58px] items-center justify-center rounded-full bg-orange shadow-card-lift transition-transform duration-200 hover:-translate-y-0.5"
+        className="group fixed bottom-8 right-8 z-[91] flex h-[58px] w-[58px] items-center justify-center rounded-full bg-orange shadow-card-lift transition-transform duration-200 hover:-translate-y-0.5"
       >
         {open ? (
           <X size={26} className="text-white" />
@@ -125,7 +125,7 @@ export function ChatWidget() {
       </button>
 
       {open && (
-        <div className="fixed bottom-[168px] right-4 z-[91] flex h-[min(560px,70vh)] w-[min(384px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[20px] border border-ink/10 bg-cream shadow-card-lift md:right-8">
+        <div className="fixed bottom-[100px] right-4 z-[91] flex h-[min(560px,70vh)] w-[min(384px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[20px] border border-ink/10 bg-cream shadow-card-lift md:right-8">
           {/* Header */}
           <div className="flex items-center justify-between bg-orange px-5 py-4">
             <div>
