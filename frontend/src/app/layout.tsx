@@ -35,6 +35,11 @@ export const metadata: Metadata = {
     "waterproofing Pune",
     "Birla Opus paints",
   ],
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
