@@ -270,16 +270,18 @@ def create_product(payload: ProductCreate, db: Session = Depends(get_db)) -> Pro
     slug = _slugify(payload.name)
     if db.query(Product).filter(Product.slug == slug).first():
         raise HTTPException(status_code=400, detail="A product with this name already exists")
-    data = payload.model_dump()
+    # Drop unset/None extras so SQLAlchemy column defaults (e.g. empty list/dict)
+    # apply instead of being overwritten with NULL.
+    data = {k: v for k, v in payload.model_dump().items() if v is not None}
     data["variants"] = [v for v in data.get("variants", [])]
     faqs = data.pop("faqs", None)
-    product = Product(slug=slug, image_url=None, **data)
+    product = Product(slug=slug, **data)
     if faqs:
         product.faqs = faqs
-    if not product.sku:
-        db.flush()
-        product.sku = f"{product.sub_brand[:3].upper()}-{product.id:04d}"
     db.add(product)
+    if not product.sku:
+        db.flush()  # assign product.id so we can build a stable SKU
+        product.sku = f"{product.sub_brand[:3].upper()}-{product.id:04d}"
     db.commit()
     db.refresh(product)
     return ProductOut.model_validate(product)
@@ -424,6 +426,22 @@ async def upload_product_image(
     db.commit()
     db.refresh(product)
     return ProductOut.model_validate(product)
+
+
+@router.post("/uploads/image")
+async def upload_image(file: UploadFile = File(...)) -> dict:
+    """Upload an image and return its public URL, without attaching it to a product.
+
+    Lets the admin add images while *creating* a product (before it exists) and
+    build a multi-image gallery. Uses the same storage as product images
+    (Cloudinary when configured, else the local /uploads dir)."""
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="Empty file")
+    if len(data) > 8 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Image too large (max 8 MB)")
+    url = save_product_image(file.filename or "image.png", data)
+    return {"url": url}
 
 
 # ==================== Categories ====================

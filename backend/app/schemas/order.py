@@ -79,11 +79,14 @@ class OrderOut(BaseModel):
 
 class OrderCreateResponse(BaseModel):
     order_id: int
-    razorpay_order_id: str
-    amount: int  # paise, as Razorpay expects
-    currency: str
-    key_id: str
-    mock: bool
+    payment_method: str = "razorpay"  # "razorpay" | "cod"
+    razorpay_order_id: str | None = None
+    amount: int = 0  # paise, as Razorpay expects
+    currency: str = "INR"
+    key_id: str = ""
+    mock: bool = False
+    # COD-specific
+    invoice_url: str | None = None
 
 
 class PaymentVerifyRequest(BaseModel):

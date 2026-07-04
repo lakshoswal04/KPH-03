@@ -13,8 +13,10 @@ export interface Category {
 export type ProductTab =
   | "interior"
   | "exterior"
+  | "enamels"
   | "waterproofing"
   | "wood"
+  | "primers"
   | "tools"
   | "hardware";
 
@@ -83,6 +85,7 @@ export interface ProductList {
 
 export interface Colour {
   id: number;
+  code: string | null;
   name: string;
   hex: string;
   family: string;
@@ -240,11 +243,13 @@ export interface QuoteResponse {
 
 export interface OrderCreateResponse {
   order_id: number;
-  razorpay_order_id: string;
-  amount: number;
-  currency: string;
-  key_id: string;
-  mock: boolean;
+  payment_method: "razorpay" | "cod";
+  razorpay_order_id?: string;
+  amount?: number;
+  currency?: string;
+  key_id?: string;
+  mock?: boolean;
+  invoice_url?: string | null;
 }
 
 export interface PaymentVerifyPayload {

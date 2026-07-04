@@ -3,17 +3,21 @@ size variants), and the colour catalogue. Fully idempotent — safe to re-run;
 upserts categories, removes retired ones, adds missing products, refreshes
 images and variants. Run: python seed.py"""
 
+import json
+from pathlib import Path
+
 from app.core.database import SessionLocal
 from app.data.birla_specs import SPECS, build_faqs
 from app.models import Category, Colour, Product
 
 CATEGORIES = [
-    ("interior-paints", "Interior Paints", "🏠", "Emulsions, distempers, and primers for every interior wall and ceiling.", "#E8590C", "#FFF8EF", "47 products"),
-    ("exterior-paints", "Exterior Paints", "🏗️", "Weather-resistant emulsions engineered for Pune's climate.", "#0ABFBC", "#F0FFFE", "23 products"),
-    ("waterproofing", "Waterproofing", "💧", "Alldry solutions for damp walls, leaking roofs, and monsoon damage.", "#FF4D6D", "#FFF0F3", "18 products"),
-    ("enamels", "Enamels", "🔩", "High-gloss enamels for metal doors, grills, and furniture.", "#7B2FBE", "#F8F5FF", "12 products"),
-    ("wood-finishes", "Wood Finishes", "🪵", "Allwood PU, melamine, and stain finishes for all wooden surfaces.", "#F5C518", "#FFFBF0", "14 products"),
-    ("tools", "Tools", "🖌️", "Rollers, brushes, sandpaper, solvents, and surface-prep tools.", "#E8590C", "#FFF5F0", "7 products"),
+    ("interior-paints", "Interior Paints", "🏠", "Birla Opus emulsions from the One, Calista, and Style ranges for every interior wall and ceiling.", "#E8590C", "#FFF8EF", "8 products"),
+    ("exterior-paints", "Exterior Paints", "🏗️", "Weather-resistant emulsions engineered for Pune's climate.", "#0ABFBC", "#F0FFFE", "6 products"),
+    ("enamels", "Enamels", "🔩", "Calista Sparkle high-gloss and PU enamels plus metal primers for doors, grills, and furniture.", "#7B2FBE", "#F8F5FF", "4 products"),
+    ("waterproofing", "Waterproofing", "💧", "Alldry solutions for damp walls, leaking roofs, and monsoon damage.", "#FF4D6D", "#FFF0F3", "7 products"),
+    ("wood-finishes", "Wood Finishes", "🪵", "Allwood PU, melamine, stain, and filler finishes for all wooden surfaces.", "#F5C518", "#FFFBF0", "8 products"),
+    ("primers-putty", "Primers & Putty", "🧱", "One Pro and Style undercoats — primers and acrylic putty for a smooth, long-lasting base.", "#5B8DB8", "#EFF6FF", "4 products"),
+    ("tools", "Tools", "🖌️", "Rollers, brushes, sandpaper, solvents, and surface-prep tools.", "#E8590C", "#FFF5F0", "9 products"),
     ("hardware", "Hardware", "🔧", "UPVC, CPVC, and PVC pipes with sockets, tees, elbows, and fittings.", "#2F6FB5", "#EFF6FF", "9 products"),
 ]
 
@@ -70,6 +74,82 @@ PRODUCTS = [
     ("wood", "wood-finishes", "ALLWOOD", "Allwood Wood Stain",
      "Translucent stain that enhances natural wood grain while adding a rich tinted colour.",
      ["Translucent", "Grain-Enhancing", "Multiple Shades", "Indoor & Outdoor"], 280, 380, "L"),
+
+    # ---- Full official Birla Opus range (added 2026-07-04, official-only info) ----
+    # Interior (One / Calista / Style ranges)
+    ("interior", "interior-paints", "CALISTA", "Calista Everwash",
+     "Premium interior emulsion for stainproof walls with excellent washability.",
+     ["Stainproof", "Washable", "Anti-fungal", "Soft Sheen"], 240, 340, "L"),
+    ("interior", "interior-paints", "STYLE", "Style Color Smart Shine",
+     "Economy interior emulsion with a soft-sheen finish and excellent washability across 1,800+ shades.",
+     ["Soft Sheen", "Washable", "Bright Finish", "Value for Money"], 140, 200, "L"),
+    ("interior", "interior-paints", "STYLE", "Style Super Bright",
+     "Transform your living space with unparalleled brightness and exceptional coverage.",
+     ["High Brightness", "Extra Coverage", "Long Lasting", "Bright Finish"], 130, 190, "L"),
+    ("interior", "interior-paints", "STYLE", "Style Colour Fresh",
+     "Economy interior paint with 15% higher coverage per coat for a fresh, even finish.",
+     ["15% Extra Coverage", "Even Finish", "Value for Money", "Quick Drying"], 110, 170, "L"),
+
+    # Exterior (One / Calista / Style ranges)
+    ("exterior", "exterior-paints", "ONE", "One True Life",
+     "Luxury exterior emulsion with robust resistance to colour fading, dust, and algae for a long-lasting facade.",
+     ["Colour-Fade Resistant", "Dust-Resistant", "Algae-Resistant", "UV-Stable"], 340, 500, "L"),
+    ("exterior", "exterior-paints", "STYLE", "Style Power Bright",
+     "Economy exterior emulsion with superior dust resistance and extra shine via Nitrogen bond technology.",
+     ["Dust-Resistant", "Extra Shine", "Weather Resistant", "Value for Money"], 150, 210, "L"),
+
+    # Enamels (Calista Sparkle range + metal primers)
+    ("enamels", "enamels", "CALISTA", "Calista Sparkle Gloss",
+     "High-gloss synthetic enamel that gives metal and wood surfaces superior coverage and a rich, long-lasting shine.",
+     ["High Gloss", "Rich Finish", "Metal & Wood", "Long-Lasting Shine"], 240, 340, "L"),
+    ("enamels", "enamels", "CALISTA", "Calista Sparkle PU",
+     "Anti-rust polyurethane enamel for wood, metal, and walls — a smooth glossy finish with superior weather resistance.",
+     ["PU Enamel", "Anti-Rust", "Weather-Resistant", "Smooth Gloss"], 320, 460, "L"),
+    ("enamels", "enamels", "CALISTA", "Calista Sparkle Red Oxide Primer",
+     "Red oxide metal primer that protects ferrous surfaces from rust and improves topcoat adhesion.",
+     ["Rust Protection", "Strong Adhesion", "For Metal", "Solvent-Based"], 160, 240, "L"),
+    ("enamels", "enamels", "CALISTA", "Calista Sparkle Yellow Metal Primer",
+     "Solvent-thinnable yellow metal primer built for superior rust protection and better topcoat bonding on ferrous substrates.",
+     ["Rust Protection", "Topcoat Bonding", "For Metal", "Solvent-Thinnable"], 160, 240, "L"),
+
+    # Waterproofing (Alldry range)
+    ("waterproofing", "waterproofing", "ALLDRY", "Alldry Wall n Roof 10",
+     "All-round waterproofing for exterior walls and terraces — reliable protection through Pune's monsoon.",
+     ["Wall & Roof", "Monsoon-Ready", "Crack-Resistant", "UV-Stable"], 300, 420, "L"),
+    ("waterproofing", "waterproofing", "ALLDRY", "Alldry Total 2K",
+     "Two-component cementitious waterproof coating for a tough, seamless membrane on terraces and wet areas.",
+     ["2-Component", "Seamless Membrane", "Terraces & Wet Areas", "High Durability"], 360, 520, "kg"),
+    ("waterproofing", "waterproofing", "ALLDRY", "Alldry Repair Master",
+     "Multipurpose pre-painting repair solution for cracks and surface defects before waterproofing or topcoat.",
+     ["Multipurpose Repair", "Crack Fixing", "Pre-Paint Prep", "Strong Bond"], 140, 220, "kg"),
+
+    # Wood finishes (Allwood range)
+    ("wood", "wood-finishes", "ALLWOOD", "Allwood PU Exterior",
+     "Luxurious polyurethane finish for exterior wooden surfaces with strong weather and UV protection.",
+     ["Exterior PU", "Weather-Resistant", "UV-Stable", "Rich Finish"], 480, 640, "L"),
+    ("wood", "wood-finishes", "ALLWOOD", "Allwood SoftTouch",
+     "Interior and exterior wood paint with a smooth soft-touch matt finish.",
+     ["Soft-Touch Matt", "Interior & Exterior", "Smooth Finish", "Durable"], 360, 480, "L"),
+    ("wood", "wood-finishes", "ALLWOOD", "Allwood Melamine Ultra Clear",
+     "Non-yellowing ultra-clear melamine finish that showcases natural wood grain on furniture and cabinetry.",
+     ["Ultra Clear", "Non-Yellowing", "Grain-Enhancing", "Furniture-Grade"], 360, 480, "L"),
+    ("wood", "wood-finishes", "ALLWOOD", "Allwood Wood Filler",
+     "Wood filler that plugs dents, holes, and scratches to create a levelled, smooth surface before finishing.",
+     ["Fills Dents & Holes", "Levelling", "Sandable", "Pre-Finish Prep"], 120, 200, "kg"),
+
+    # Primers & Putty (One Pro / Style undercoats)
+    ("primers", "primers-putty", "ONE PRO", "One Pro Smooth Primer",
+     "High-performance interior wall primer that seals the surface and improves topcoat adhesion and coverage.",
+     ["Interior Primer", "Seals Surface", "Strong Adhesion", "Better Coverage"], 180, 260, "L"),
+    ("primers", "primers-putty", "ONE PRO", "One Pro Smooth Putty",
+     "Interior acrylic wall putty for a smooth, even base before priming and painting.",
+     ["Acrylic Putty", "Smooth Base", "Interior", "Water-Resistant"], 40, 60, "kg"),
+    ("primers", "primers-putty", "ONE PRO", "One Pro Putty+Primer",
+     "Combined putty and primer that levels and seals interior walls in fewer steps.",
+     ["Putty + Primer", "Fewer Coats", "Smooth Base", "Interior"], 60, 90, "kg"),
+    ("primers", "primers-putty", "STYLE", "Style Perfect Start Primer",
+     "Opaque exterior wall primer that provides a strong, uniform base for exterior emulsions.",
+     ["Exterior Primer", "Opaque Base", "Strong Adhesion", "Weather-Ready"], 140, 220, "L"),
 ]
 
 # Hardware/tools products. Each carries explicit size variants (label, price ₹).
@@ -103,6 +183,14 @@ TOOL_PRODUCTS = [
      "Flat metal scraper / putty blade for removing old paint and applying filler during surface prep.",
      ["Surface Prep", "Rust-Resistant", "Firm Blade", "Comfort Grip"],
      [("2 inch", 70), ("3 inch", 90), ("4 inch", 110), ("6 inch", 150), ("8 inch", 190)]),
+    ("Interior Foam Roller",
+     "Birla Opus interior foam roller for a beautiful, smooth finish every time on emulsion-painted walls.",
+     ["Smooth Finish", "Low-Splatter", "Foam Sleeve", "Fast Coverage"],
+     [("4 inch", 110), ("7 inch", 160), ("9 inch", 200)]),
+    ("Cloud Finish Roller",
+     "Designer finish roller that creates a soft cloud-textured effect for feature walls.",
+     ["Designer Finish", "Cloud Texture", "Feature Walls", "Reusable"],
+     [("7 inch", 240), ("9 inch", 300)]),
 ]
 
 # Plumbing hardware products — UPVC/CPVC/PVC pipes and fittings, sized by
@@ -164,31 +252,10 @@ EXPLORER_SHADES = [
     ("Midnight", "#1A1A2E", "Blues"),
 ]
 
-# Catalogue shades per family for the /colours page.
-CATALOGUE_SHADES = [
-    ("Fresh Linen", "#F8F4EC", "Whites"), ("Morning Mist", "#EFEBE2", "Whites"),
-    ("Pearl Drop", "#F2EEE6", "Whites"), ("Ivory Silk", "#F6F1E4", "Whites"),
-    ("Marigold", "#F0B429", "Yellows"), ("Haldi Glow", "#E8B004", "Yellows"),
-    ("Lemon Sorbet", "#F5D76E", "Yellows"), ("Amber Field", "#DDA511", "Yellows"),
-    ("Saffron Street", "#E8722C", "Oranges"), ("Clay Pot", "#C96A32", "Oranges"),
-    ("Papaya Punch", "#F08A4B", "Oranges"),
-    ("Sindoor", "#D63A2F", "Reds"), ("Chilli Crush", "#B8322A", "Reds"),
-    ("Rose Madder", "#C94057", "Reds"),
-    ("Royal Orchid", "#8A4BC9", "Purples"), ("Jamun Dusk", "#6B2E9E", "Purples"),
-    ("Lavender Haze", "#B79BD9", "Purples"),
-    ("Indigo Depth", "#2F4DA0", "Blues"), ("Monsoon Sky", "#5B7FBE", "Blues"),
-    ("Powder Blue", "#A9C3E0", "Blues"),
-    ("Peacock Teal", "#0A9E9B", "Blue-Greens"), ("Lagoon", "#3FBFB4", "Blue-Greens"),
-    ("Sea Glass", "#8AD4CC", "Blue-Greens"),
-    ("Banana Leaf", "#3FA05C", "Greens"), ("Tulsi", "#5CB878", "Greens"),
-    ("Fern Shadow", "#7BA88A", "Greens"),
-    ("Lime Zest", "#AFC93A", "Yellow-Greens"), ("Pista Cream", "#C6D68A", "Yellow-Greens"),
-    ("Olive Grove", "#8FA02D", "Yellow-Greens"),
-    ("Khaki Dune", "#A99878", "Neutrals"), ("Stone Path", "#9B9080", "Neutrals"),
-    ("Mocha Mist", "#7C6A5A", "Neutrals"),
-    ("Kumkum Red", "#CC4040", "India Iconic"), ("Rangoli Pink", "#D95A6E", "India Iconic"),
-    ("Mehendi Green", "#7A8B3A", "India Iconic"), ("Peacock Blue", "#1F6E8C", "India Iconic"),
-]
+# The full /colours catalogue (2,322 real Birla Opus shades) is loaded from
+# app/data/birla_colours.json, generated by scripts/parse_colours.py from the
+# official ".skm" colour library. See seed_colours().
+COLOURS_JSON = Path(__file__).resolve().parent / "app" / "data" / "birla_colours.json"
 
 # Official Birla Opus packshots, downloaded into frontend/public/products/.
 # Applied even when products already exist, so re-running seed refreshes images.
@@ -209,6 +276,30 @@ IMAGE_MAP = {
     "allwood-italian-pu": "/products/allwood-italian-pu.png",
     "allwood-melamine": "/products/allwood-melamine.png",
     "allwood-wood-stain": "/products/allwood-wood-stain.png",
+    # Full-range products (2026-07-04) — official Scene7 packshots, downloaded
+    # via assets.birlaopus.com ?$grasim-png-transparent$&wid=800.
+    "calista-everwash": "/products/calista-everwash.png",
+    "style-color-smart-shine": "/products/style-color-smart-shine.png",
+    "style-super-bright": "/products/style-super-bright.png",
+    "style-colour-fresh": "/products/style-colour-fresh.png",
+    "one-true-life": "/products/one-true-life.png",
+    "style-power-bright": "/products/style-power-bright.png",
+    "calista-sparkle-gloss": "/products/calista-sparkle-gloss.png",
+    "calista-sparkle-pu": "/products/calista-sparkle-pu.png",
+    "calista-sparkle-red-oxide-primer": "/products/calista-sparkle-red-oxide-primer.png",
+    "calista-sparkle-yellow-metal-primer": "/products/calista-sparkle-yellow-metal-primer.png",
+    "alldry-wall-n-roof-10": "/products/alldry-wall-n-roof-10.png",
+    "alldry-total-2k": "/products/alldry-total-2k.png",
+    "alldry-repair-master": "/products/alldry-repair-master.png",
+    "allwood-pu-exterior": "/products/allwood-pu-exterior.png",
+    "allwood-softtouch": "/products/allwood-softtouch.png",
+    "allwood-melamine-ultra-clear": "/products/allwood-melamine-ultra-clear.png",
+    "allwood-wood-filler": "/products/allwood-wood-filler.png",
+    # File name avoids the slug's "+" (URL-unsafe).
+    "one-pro-putty+primer": "/products/one-pro-putty-primer.png",
+    "one-pro-smooth-primer": "/products/one-pro-smooth-primer.png",
+    "one-pro-smooth-putty": "/products/one-pro-smooth-putty.png",
+    "style-perfect-start-primer": "/products/style-perfect-start-primer.png",
     # Tools — on-brand catalogue tiles (replace with real product photos later).
     "paint-roller": "/products/tools/paint-roller.svg",
     "paint-brush": "/products/tools/paint-brush.svg",
@@ -217,6 +308,9 @@ IMAGE_MAP = {
     "sandpaper": "/products/tools/sandpaper.svg",
     "waterpaper": "/products/tools/waterpaper.svg",
     "metal-scraper": "/products/tools/metal-scraper.svg",
+    # Official Birla Opus tools — real packshots.
+    "interior-foam-roller": "/products/tools/interior-foam-roller.png",
+    "cloud-finish-roller": "/products/tools/cloud-finish-roller.png",
     # Hardware — on-brand catalogue tiles.
     "cpvc-pipe": "/products/hardware/cpvc-pipe.svg",
     "upvc-pipe": "/products/hardware/upvc-pipe.svg",
@@ -341,6 +435,56 @@ def seed_coupons(db) -> None:
         print(f"Seeded {added} coupons")
 
 
+def seed_colours(db) -> None:
+    """Seed the colour catalogue: ~14 curated hero/explorer shades plus the full
+    2,322-shade official Birla Opus library from birla_colours.json.
+
+    Idempotent: explorer shades upsert by name; catalogue shades upsert by code;
+    legacy hand-authored catalogue shades (code IS NULL, not explorer) are removed.
+    """
+    # Curated hero shades for the homepage explorer strip (no official code).
+    existing_explorer = {
+        c.name: c for c in db.query(Colour).filter(Colour.is_explorer_shade.is_(True)).all()
+    }
+    for order, (name, hex_, family) in enumerate(EXPLORER_SHADES):
+        c = existing_explorer.get(name)
+        sort_order = -1000 + order  # sort ahead of the coded catalogue
+        if c is None:
+            db.add(Colour(name=name, hex=hex_, family=family,
+                          is_explorer_shade=True, sort_order=sort_order))
+        else:
+            c.hex, c.family, c.sort_order = hex_, family, sort_order
+
+    # Drop the old hand-authored catalogue shades (superseded by the real library).
+    db.query(Colour).filter(
+        Colour.is_explorer_shade.is_(False), Colour.code.is_(None)
+    ).delete(synchronize_session=False)
+
+    # Full official catalogue, upserted by code.
+    catalogue = json.loads(COLOURS_JSON.read_text(encoding="utf-8"))
+    existing_coded = {
+        c.code: c for c in db.query(Colour).filter(Colour.code.isnot(None)).all()
+    }
+    added = 0
+    for row in catalogue:
+        c = existing_coded.get(row["code"])
+        if c is None:
+            db.add(Colour(
+                code=row["code"], name=row["name"], hex=row["hex"],
+                family=row["family"], is_explorer_shade=False,
+                sort_order=row["sort_order"],
+            ))
+            added += 1
+        else:
+            c.name, c.hex, c.family, c.sort_order = (
+                row["name"], row["hex"], row["family"], row["sort_order"]
+            )
+    db.commit()
+    total = db.query(Colour).count()
+    print(f"Colours: {len(EXPLORER_SHADES)} explorer + {len(catalogue)} catalogue "
+          f"({added} new) — {total} total")
+
+
 def main() -> None:
     db = SessionLocal()
     try:
@@ -424,27 +568,7 @@ def main() -> None:
 
         apply_catalogue_enrichment(db)
         seed_coupons(db)
-
-        if db.query(Colour).count() == 0:
-            order = 0
-            for name, hex_, family in EXPLORER_SHADES:
-                db.add(Colour(
-                    name=name, hex=hex_, family=family,
-                    is_explorer_shade=True,
-                    sort_order=FAMILY_ORDER.index(family) * 100 + order,
-                ))
-                order += 1
-            for name, hex_, family in CATALOGUE_SHADES:
-                db.add(Colour(
-                    name=name, hex=hex_, family=family,
-                    is_explorer_shade=False,
-                    sort_order=FAMILY_ORDER.index(family) * 100 + order,
-                ))
-                order += 1
-            db.commit()
-            print(f"Seeded {len(EXPLORER_SHADES) + len(CATALOGUE_SHADES)} colours")
-        else:
-            print("Colours already seeded — skipping")
+        seed_colours(db)
     finally:
         db.close()
 

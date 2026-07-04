@@ -10,7 +10,8 @@ import { apiGet } from "@/lib/api";
 import { useUiStore } from "@/store/uiStore";
 import type { Colour } from "@/types";
 
-// The eleven Birla Opus colour families — chip hexes fixed by the design spec.
+// The ten Birla Opus colour families — chip hexes fixed by the design spec.
+// (Matches the real 2,322-shade library's families on /colours.)
 const FAMILY_CHIPS = [
   { name: "Whites", hex: "#F5F0E8" },
   { name: "Yellows", hex: "#F5C518" },
@@ -22,7 +23,6 @@ const FAMILY_CHIPS = [
   { name: "Greens", hex: "#2DBE6C" },
   { name: "Yellow-Greens", hex: "#A0BE2D" },
   { name: "Neutrals", hex: "#8B7B6B" },
-  { name: "India Iconic", hex: "#CC4040" },
 ];
 
 export function ColourExplorer() {
