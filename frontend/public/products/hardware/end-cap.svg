@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400" fill="none">
+  <rect width="400" height="400" fill="#EFF6FF"/>
+  <g stroke="#2F6FB5" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M130 134 h74 a30 30 0 0 1 30 30 v0 a30 30 0 0 1 -30 30 h-74 z" fill="#2F6FB5" fill-opacity="0.16"/>
+    <path d="M130 134 h74 a30 30 0 0 1 30 30 v0 a30 30 0 0 1 -30 30 h-74 z"/>
+    <path d="M130 134 v60"/>
+  </g>
+  <text x="200" y="360" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" fill="#2F6FB5">End Cap</text>
+</svg>

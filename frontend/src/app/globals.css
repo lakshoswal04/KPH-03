@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --orange: #E8590C;
+  --ivory: #FAF7F0;
+  --cream: #FFF9EE;
+  --ink: #1A1A0A;
+  --marigold: #F7BD16;
+  --gold: #B8860B;
+  --forest: #1F3D2C;
+  --teal: #0ABFBC;
+  --coral: #FF4D6D;
+  --violet: #7B2FBE;
+  --yellow: #F5C518;
+  --muted: rgba(26, 26, 10, 0.55);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom cursor — enabled on fine pointers only */
+#cursor {
+  position: fixed;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--orange);
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: transform 0.08s ease, width 0.2s ease,
+              height 0.2s ease, background 0.2s ease,
+              border 0.2s ease;
+}
+#cursor.hovering {
+  width: 30px;
+  height: 30px;
+  background: transparent;
+  border: 2px solid var(--orange);
+}
+@media (pointer: coarse) {
+  #cursor {
+    display: none;
+  }
+}
+
+/* Hide horizontal scrollbars on swatch/testimonial tracks */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hero bucket: gentle float with a subtle rock — for the real packshot image */
+@keyframes bucketFloat {
+  0%, 100% { transform: translateY(0) rotate(-2.5deg); }
+  50%      { transform: translateY(-18px) rotate(2.5deg); }
+}
+.bucket-float {
+  animation: bucketFloat 5s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Decorative paint roller: slow tumble */
+@keyframes rollerDrift {
+  0%, 100% { transform: translateY(0) rotate(-14deg); }
+  50%      { transform: translateY(-12px) rotate(-6deg); }
+}
+.roller-drift {
+  animation: rollerDrift 6s ease-in-out infinite;
+}
+
+/* Small floating props (mini buckets, brush) */
+@keyframes propFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-14px); }
+}
+.prop-float {
+  animation: propFloat 4.5s ease-in-out infinite;
+}
+
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.ticker-track {
+  display: flex;
+  white-space: nowrap;
+  animation: ticker 35s linear infinite;
+}
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes starPop {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+@keyframes waPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.07); }
+}
+.wa-btn {
+  animation: waPulse 3s ease-in-out 2s infinite;
+}
+.wa-btn:hover {
+  animation-play-state: paused;
+}
+
+/* Respect prefers-reduced-motion: skip all animations */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}

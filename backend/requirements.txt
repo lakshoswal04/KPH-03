@@ -1,0 +1,16 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+sqlalchemy>=2.0
+psycopg2-binary>=2.9
+alembic>=1.13
+pydantic[email]>=2.7
+pydantic-settings>=2.3
+python-jose[cryptography]>=3.3
+passlib[bcrypt]>=1.7.4
+bcrypt==4.0.1
+python-multipart>=0.0.9
+google-generativeai>=0.7
+cloudinary>=1.40
+razorpay>=1.4
+requests>=2.31
+slowapi>=0.1.9

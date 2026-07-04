@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400" fill="none">
+  <rect width="400" height="400" fill="#EFF6FF"/>
+  <g stroke="#2F6FB5" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <rect x="150" y="130" width="100" height="64" rx="10" fill="#2F6FB5" fill-opacity="0.16"/>
+    <rect x="150" y="130" width="100" height="64" rx="10"/>
+    <path d="M172 130 v64 M228 130 v64"/>
+  </g>
+  <text x="200" y="360" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" fill="#2F6FB5">Pipe Coupler</text>
+</svg>
