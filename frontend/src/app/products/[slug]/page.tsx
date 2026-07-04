@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 
 import { AddToCartPanel } from "./AddToCartPanel";
 
+import { ProductCard } from "@/components/products/ProductCard";
+import { ProductBenefits, ProductFaqs, ProductSpecs } from "@/components/products/ProductDetails";
 import { Badge } from "@/components/ui/Badge";
 import { SUB_BRAND_ACCENTS } from "@/lib/constants";
 import { priceRange } from "@/lib/utils";
@@ -27,6 +29,18 @@ async function fetchProduct(slug: string): Promise<Product | null> {
   }
 }
 
+async function fetchRelated(slug: string): Promise<Product[]> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/products/${slug}/related?limit=4`, {
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return [];
+    return (await res.json()) as Product[];
+  } catch {
+    return [];
+  }
+}
+
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
   try {
     const res = await fetch(`${API_URL}/api/v1/products`);
@@ -46,14 +60,26 @@ export async function generateMetadata({
   const product = await fetchProduct(params.slug);
   if (!product) return { title: "Product not found — Kamlesh Paints & Hardware" };
   return {
-    title: `${product.name} — Birla Opus at Kamlesh Paints, Pune`,
-    description: product.description,
+    title: product.seo_title ?? `${product.name} — Birla Opus at Kamlesh Paints, Pune`,
+    description: product.seo_description ?? product.summary ?? product.description,
   };
 }
 
 export default async function ProductPage({ params }: { params: { slug: string } }) {
-  const product = await fetchProduct(params.slug);
+  const [product, related] = await Promise.all([
+    fetchProduct(params.slug),
+    fetchRelated(params.slug),
+  ]);
   if (!product) notFound();
+
+  const available = product.available_stock ?? 0;
+  const lowThreshold = product.low_stock_threshold ?? 5;
+  const stockLabel =
+    available <= 0
+      ? { text: "Out of stock", cls: "bg-coral/10 text-coral" }
+      : available <= lowThreshold
+        ? { text: `Only ${available} left`, cls: "bg-amber-100 text-amber-700" }
+        : { text: "In stock", cls: "bg-emerald-100 text-emerald-700" };
 
   const accent = SUB_BRAND_ACCENTS[product.sub_brand] ?? "#C9A876";
   const imageUrl =
@@ -95,7 +121,14 @@ export default async function ProductPage({ params }: { params: { slug: string }
           <h1 className="mt-3 font-display text-[clamp(34px,4.5vw,56px)] font-black leading-[0.95] text-ink">
             {product.name}
           </h1>
-          <p className="mt-5 max-w-[480px] font-sans text-body text-ink-soft">{product.description}</p>
+          <span
+            className={`mt-4 inline-block rounded-full px-3 py-1 font-sans text-[12px] font-semibold ${stockLabel.cls}`}
+          >
+            {stockLabel.text}
+          </span>
+          <p className="mt-5 max-w-[480px] font-sans text-body text-ink-soft">
+            {product.summary ?? product.description}
+          </p>
 
           <div className="mt-6 flex flex-wrap gap-2">
             {product.features.map((feature) => (
@@ -112,6 +145,23 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
           <AddToCartPanel product={product} />
         </div>
+      </div>
+
+      <div className="mx-auto max-w-[1100px]">
+        <ProductSpecs product={product} />
+        <ProductBenefits product={product} />
+        <ProductFaqs faqs={product.faqs ?? []} />
+
+        {related.length > 0 && (
+          <section className="mt-16">
+            <h2 className="font-display text-[26px] font-black text-ink">Related products</h2>
+            <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {related.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );

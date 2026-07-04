@@ -6,13 +6,15 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import Link from "next/link";
+
 import { Input, Select, labelClasses } from "@/components/ui/Input";
 import { Magnetic } from "@/components/ui/Magnetic";
 import { Reveal } from "@/components/ui/Reveal";
 import { apiPost } from "@/lib/api";
 import { whatsappHref } from "@/lib/business";
 import { cn, formatINR } from "@/lib/utils";
-import type { CalcRequest, CalcResponse } from "@/types";
+import type { BudgetRequest, BudgetResponse } from "@/types";
 
 const ROOM_TYPES = [
   "Bedroom",
@@ -30,29 +32,58 @@ const GRADES = [
   { value: "one", label: "One — Luxury" },
 ] as const;
 
-const TRUST_ITEMS = ["Accurate to the litre", "Birla Opus pricing", "Send results to WhatsApp"];
+const TRUST_ITEMS = ["Accurate to the litre", "Full material + labour + GST", "Send results to WhatsApp"];
 
 const calcSchema = z.object({
   roomType: z.string().min(1, "Select a room type"),
   area: z.number("Enter your floor area").positive("Enter your floor area").max(100000),
   coats: z.number().int().min(1).max(3),
   grade: z.enum(["style", "calista", "one"]),
+  primer: z.boolean(),
+  putty: z.boolean(),
 });
 
 type CalcForm = z.infer<typeof calcSchema>;
 
 // Client-side mirror of the backend calc_service, used if the API is unreachable.
-function calculateLocally(area: number, coats: number, grade: CalcForm["grade"]): CalcResponse {
-  const wallArea = area * 3.2 * 0.8;
-  const litres = Math.ceil((wallArea / 10) * coats);
+function calculateLocally(
+  area: number,
+  coats: number,
+  grade: CalcForm["grade"],
+  primer: boolean,
+  putty: boolean,
+): BudgetResponse {
+  const wall = Math.round(area * 3.2 * 0.8);
+  const litres = Math.ceil((wall / 120) * coats);
   const rates = { style: [150, 200], calista: [220, 360], one: [320, 520] } as const;
   const [low, high] = rates[grade];
+  const paintLow = litres * low;
+  const paintHigh = litres * high;
+  const primerL = primer ? Math.ceil(wall / 120) : 0;
+  const primerCost = primerL * 180;
+  const puttyKg = putty ? Math.ceil(wall / 15) : 0;
+  const puttyCost = puttyKg * 22;
+  const consumables = Math.round(wall * 1.2);
+  const labourLow = Math.round(wall * 10);
+  const labourHigh = Math.round(wall * 16);
+  const matLow = paintLow + primerCost + puttyCost + consumables;
+  const matHigh = paintHigh + primerCost + puttyCost + consumables;
+  const gstLow = Math.round(matLow * 0.18);
+  const gstHigh = Math.round(matHigh * 0.18);
   return {
-    litres,
-    cost_low: Math.round(litres * low),
-    cost_high: Math.round(litres * high),
-    labour_low: Math.round(wallArea * 10),
-    labour_high: Math.round(wallArea * 16),
+    wall_area: wall, paint_litres: litres, primer_litres: primerL, putty_kg: puttyKg,
+    breakdown: [
+      { label: "Paint", low: paintLow, high: paintHigh },
+      { label: "Primer", low: primerCost, high: primerCost },
+      { label: "Putty", low: puttyCost, high: puttyCost },
+      { label: "Consumables", low: consumables, high: consumables },
+      { label: "Labour", low: labourLow, high: labourHigh },
+      { label: "GST (18%)", low: gstLow, high: gstHigh },
+    ],
+    material_low: matLow, material_high: matHigh, labour_low: labourLow, labour_high: labourHigh,
+    gst_low: gstLow, gst_high: gstHigh,
+    total_low: matLow + labourLow + gstLow, total_high: matHigh + labourHigh + gstHigh,
+    recommended: [],
   };
 }
 
@@ -65,25 +96,30 @@ export function PaintCalculator() {
     formState: { errors },
   } = useForm<CalcForm>({
     resolver: zodResolver(calcSchema),
-    defaultValues: { roomType: "", coats: 2, grade: "calista" },
+    defaultValues: { roomType: "", coats: 2, grade: "calista", primer: true, putty: true },
   });
 
   const coats = watch("coats");
+  const primer = watch("primer");
+  const putty = watch("putty");
 
   const mutation = useMutation({
     mutationFn: async (form: CalcForm) => {
-      const payload: CalcRequest = { area: form.area, coats: form.coats, grade: form.grade };
+      const payload: BudgetRequest = {
+        area: form.area, coats: form.coats, grade: form.grade,
+        primer: form.primer, putty: form.putty,
+      };
       try {
-        return await apiPost<CalcRequest, CalcResponse>("/ai/calculate", payload);
+        return await apiPost<BudgetRequest, BudgetResponse>("/ai/budget", payload);
       } catch {
-        return calculateLocally(form.area, form.coats, form.grade);
+        return calculateLocally(form.area, form.coats, form.grade, form.primer, form.putty);
       }
     },
   });
 
   const result = mutation.data;
   const waText = result
-    ? `Hi Kamlesh Paints, my estimate: ${result.litres} litres, ₹${formatINR(result.cost_low)} – ₹${formatINR(result.cost_high)}. Please help me order.`
+    ? `Hi Kamlesh Paints, my estimate: ${result.paint_litres} L paint, total ₹${formatINR(result.total_low)} – ₹${formatINR(result.total_high)} (incl. GST). Please help me order.`
     : "";
 
   return (
@@ -193,6 +229,23 @@ export function PaintCalculator() {
                 </Select>
               </div>
 
+              <div className="flex flex-wrap gap-3">
+                <label className={cn(
+                  "flex cursor-pointer items-center gap-2 rounded-full border px-4 py-2 font-sans text-[13px] font-semibold transition-colors",
+                  primer ? "border-orange bg-orange/10 text-orange-deep" : "border-ink/15 text-ink-soft",
+                )}>
+                  <input type="checkbox" {...register("primer")} className="accent-orange" />
+                  Include primer
+                </label>
+                <label className={cn(
+                  "flex cursor-pointer items-center gap-2 rounded-full border px-4 py-2 font-sans text-[13px] font-semibold transition-colors",
+                  putty ? "border-orange bg-orange/10 text-orange-deep" : "border-ink/15 text-ink-soft",
+                )}>
+                  <input type="checkbox" {...register("putty")} className="accent-orange" />
+                  Include putty
+                </label>
+              </div>
+
               <Magnetic className="block w-full">
                 <button
                   type="submit"
@@ -215,21 +268,45 @@ export function PaintCalculator() {
                   className="overflow-hidden"
                 >
                   <div className="mt-8 border-t border-ink/10 pt-8">
-                    <p className="font-display text-[44px] font-bold leading-tight text-ink">
-                      You need {result.litres} litres
+                    <p className="font-sans text-sm text-ink-soft">
+                      {result.paint_litres} L paint
+                      {result.primer_litres ? ` · ${result.primer_litres} L primer` : ""}
+                      {result.putty_kg ? ` · ${result.putty_kg} kg putty` : ""} · {result.wall_area} sq ft wall
                     </p>
-                    <p className="mt-2 font-sans text-xl font-semibold text-orange-deep">
-                      Estimated cost: ₹{formatINR(result.cost_low)} – ₹{formatINR(result.cost_high)}
+                    <p className="mt-2 font-display text-[38px] font-bold leading-tight text-ink">
+                      ₹{formatINR(result.total_low)} – ₹{formatINR(result.total_high)}
                     </p>
-                    <p className="mt-1 font-sans text-sm text-ink-soft">
-                      Labour (approx): ₹{formatINR(result.labour_low)} – ₹
-                      {formatINR(result.labour_high)}
-                    </p>
+                    <p className="mt-1 font-sans text-xs text-ink-soft">Total estimate incl. GST &amp; labour</p>
+
+                    <div className="mt-5 space-y-1.5">
+                      {result.breakdown.map((b) => (
+                        <div key={b.label} className="flex justify-between font-sans text-[13px]">
+                          <span className="text-ink-soft">{b.label}</span>
+                          <span className="text-ink">
+                            {b.low === b.high ? `₹${formatINR(b.low)}` : `₹${formatINR(b.low)} – ₹${formatINR(b.high)}`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {result.recommended.length > 0 && (
+                      <div className="mt-6">
+                        <p className="font-sans text-[11px] font-bold uppercase tracking-wide text-ink-soft">Recommended products</p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {result.recommended.map((p) => (
+                            <Link key={p.id} href={`/products/${p.slug}`} className="rounded-full border border-ink/15 px-3 py-1.5 font-sans text-[12px] font-semibold text-ink-soft transition-colors hover:border-orange hover:text-orange">
+                              {p.name}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <a
                       href={whatsappHref(waText)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-4 inline-block font-sans text-sm font-semibold text-orange transition-opacity hover:opacity-75"
+                      className="mt-5 inline-block font-sans text-sm font-semibold text-orange transition-opacity hover:opacity-75"
                     >
                       Send this estimate to WhatsApp →
                     </a>

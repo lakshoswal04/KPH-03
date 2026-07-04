@@ -2,23 +2,28 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Input, Select, Textarea, labelClasses } from "@/components/ui/Input";
 import { Reveal } from "@/components/ui/Reveal";
-import { apiPost } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
+import { apiPost, apiUpload } from "@/lib/api";
 import type { Survey, SurveyPayload } from "@/types";
 
 const PROPERTY_TYPES = ["Flat / Apartment", "Bungalow / Row House", "Shop / Office", "Building / Society"];
+const TIME_SLOTS = ["Morning (9am–12pm)", "Afternoon (12pm–4pm)", "Evening (4pm–7pm)"];
 
 const schema = z.object({
   name: z.string().min(2, "Enter your name"),
   phone: z.string().regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit mobile number"),
+  email: z.string().email("Enter a valid email").optional().or(z.literal("")),
   address: z.string().min(5, "Enter the property address"),
   locality: z.string().min(2, "Enter your locality, e.g. Kothrud"),
   property_type: z.string().min(1, "Select the property type"),
   preferred_date: z.string().optional(),
+  preferred_time: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -31,23 +36,55 @@ const STEPS = [
 ];
 
 export default function SurveyPage() {
+  const { token, user } = useAuth();
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { property_type: "" },
   });
 
+  useEffect(() => {
+    if (user) {
+      if (user.full_name) setValue("name", user.full_name);
+      if (user.phone) setValue("phone", user.phone);
+      if (user.email) setValue("email", user.email);
+    }
+  }, [user, setValue]);
+
+  const [images, setImages] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  const uploadImage = async (file: File) => {
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await apiUpload<{ url: string }>("/surveys/upload", fd);
+      setImages((prev) => [...prev, res.url]);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const mutation = useMutation({
     mutationFn: (values: FormValues) => {
       const payload: SurveyPayload = {
-        ...values,
+        name: values.name,
+        phone: values.phone,
+        email: values.email || null,
+        address: values.address,
+        locality: values.locality,
+        property_type: values.property_type,
         preferred_date: values.preferred_date || null,
+        preferred_time: values.preferred_time || null,
         notes: values.notes || null,
+        reference_images: images,
       };
-      return apiPost<SurveyPayload, Survey>("/surveys", payload);
+      return apiPost<SurveyPayload, Survey>("/surveys", payload, token || undefined);
     },
   });
 
@@ -173,10 +210,33 @@ export default function SurveyPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="sv-date" className={labelClasses}>
-                    Preferred Date <span className="normal-case opacity-60">(optional)</span>
+                  <label htmlFor="sv-email" className={labelClasses}>
+                    Email <span className="normal-case opacity-60">(optional)</span>
                   </label>
-                  <Input id="sv-date" type="date" {...register("preferred_date")} />
+                  <Input id="sv-email" type="email" placeholder="you@example.com" {...register("email")} />
+                  {errors.email && (
+                    <p className="mt-1.5 font-sans text-xs text-coral">{errors.email.message}</p>
+                  )}
+                </div>
+
+                <div className="grid gap-6 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="sv-date" className={labelClasses}>
+                      Preferred Date <span className="normal-case opacity-60">(optional)</span>
+                    </label>
+                    <Input id="sv-date" type="date" {...register("preferred_date")} />
+                  </div>
+                  <div>
+                    <label htmlFor="sv-time" className={labelClasses}>
+                      Preferred Time <span className="normal-case opacity-60">(optional)</span>
+                    </label>
+                    <Select id="sv-time" {...register("preferred_time")}>
+                      <option value="">Any time</option>
+                      {TIME_SLOTS.map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </Select>
+                  </div>
                 </div>
 
                 <div>
@@ -188,6 +248,31 @@ export default function SurveyPage() {
                     placeholder="Damp walls, leaking roof, number of rooms…"
                     {...register("notes")}
                   />
+                </div>
+
+                <div>
+                  <label className={labelClasses}>
+                    Reference photos <span className="normal-case opacity-60">(optional)</span>
+                  </label>
+                  <div className="mt-1 flex flex-wrap items-center gap-3">
+                    {images.map((img) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img key={img} src={img} alt="reference" className="h-16 w-16 rounded-lg object-cover" />
+                    ))}
+                    <label className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-lg border border-dashed border-ink/25 text-2xl text-ink-soft hover:border-orange hover:text-orange">
+                      +
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) void uploadImage(f);
+                        }}
+                      />
+                    </label>
+                  </div>
+                  {uploading && <p className="mt-1 font-sans text-xs text-ink-soft">Uploading…</p>}
                 </div>
 
                 <button

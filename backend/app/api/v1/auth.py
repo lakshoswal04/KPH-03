@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.database import get_db
+from app.core.limiter import limiter
 from app.core.security import (
     create_access_token,
     get_current_user,
@@ -25,7 +27,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register", response_model=TokenResponse, status_code=201)
-def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> TokenResponse:
+@limiter.limit("5/minute")
+def register(request: Request, payload: RegisterRequest, db: Session = Depends(get_db)) -> TokenResponse:
     existing = db.query(User).filter(User.email == payload.email).first()
     if existing is not None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
@@ -42,7 +45,8 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> TokenRe
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
+@limiter.limit("10/minute")
+def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
     user = db.query(User).filter(User.email == payload.email).first()
     if user is None or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(
@@ -81,10 +85,15 @@ def update_me(
 def my_orders(
     current: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> list[Order]:
+    conditions = [Order.user_id == current.id]
+    if current.phone:
+        conditions.append(Order.phone == current.phone)
+    if current.email:
+        conditions.append(Order.email == current.email)
     return (
         db.query(Order)
         .options(selectinload(Order.items))
-        .filter(Order.user_id == current.id)
+        .filter(or_(*conditions))
         .order_by(Order.created_at.desc())
         .all()
     )
@@ -94,9 +103,14 @@ def my_orders(
 def my_enquiries(
     current: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> list[Enquiry]:
+    conditions = [Enquiry.user_id == current.id]
+    if current.phone:
+        conditions.append(Enquiry.phone == current.phone)
+    if current.email:
+        conditions.append(Enquiry.email == current.email)
     return (
         db.query(Enquiry)
-        .filter(Enquiry.user_id == current.id)
+        .filter(or_(*conditions))
         .order_by(Enquiry.created_at.desc())
         .all()
     )
@@ -106,9 +120,14 @@ def my_enquiries(
 def my_surveys(
     current: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> list[Survey]:
+    conditions = [Survey.user_id == current.id]
+    if current.phone:
+        conditions.append(Survey.phone == current.phone)
+    if current.email:
+        conditions.append(Survey.email == current.email)
     return (
         db.query(Survey)
-        .filter(Survey.user_id == current.id)
+        .filter(or_(*conditions))
         .order_by(Survey.created_at.desc())
         .all()
     )

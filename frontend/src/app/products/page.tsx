@@ -28,20 +28,27 @@ function ProductsBrowser() {
     tab: initialTab && VALID_TABS.includes(initialTab) ? initialTab : "all",
     subBrand: "",
     search: "",
+    sort: "featured",
+    inStock: false,
+    priceMax: 0,
   });
+
+  // Server-side filtering/sorting via the products API query params.
+  const qs = new URLSearchParams();
+  if (filters.tab !== "all") qs.set("tab", filters.tab);
+  if (filters.subBrand) qs.set("sub_brand", filters.subBrand);
+  if (filters.search) qs.set("search", filters.search);
+  if (filters.sort) qs.set("sort", filters.sort);
+  if (filters.inStock) qs.set("in_stock", "true");
+  if (filters.priceMax > 0) qs.set("price_max", String(filters.priceMax));
 
   const { data, isLoading } = useQuery({
-    queryKey: ["products"],
-    queryFn: () => apiGet<ProductList>("/products"),
+    queryKey: ["products", qs.toString()],
+    queryFn: () => apiGet<ProductList>(`/products?${qs.toString()}`),
+    placeholderData: (prev) => prev,
   });
 
-  const products = (data?.items ?? []).filter((p) => {
-    if (filters.tab !== "all" && p.tab !== filters.tab) return false;
-    if (filters.subBrand && p.sub_brand !== filters.subBrand) return false;
-    if (filters.search && !p.name.toLowerCase().includes(filters.search.toLowerCase()))
-      return false;
-    return true;
-  });
+  const products = data?.items ?? [];
 
   return (
     <main className="min-h-screen bg-cream px-6 pb-section-y pt-[calc(72px+60px)] md:px-section-x">
@@ -62,9 +69,17 @@ function ProductsBrowser() {
         <ProductFilters filters={filters} onChange={setFilters} />
       </div>
 
-      <div className="mt-10">
+      <div className="mt-6 font-sans text-[13px] text-ink-soft">
+        {isLoading ? "Loading…" : `${products.length} product${products.length === 1 ? "" : "s"}`}
+      </div>
+
+      <div className="mt-4">
         {isLoading ? (
           <p className="py-20 text-center font-sans text-body text-ink-soft">Loading products…</p>
+        ) : products.length === 0 ? (
+          <p className="py-20 text-center font-sans text-body text-ink-soft">
+            No products match your filters.
+          </p>
         ) : (
           <ProductGrid products={products} />
         )}

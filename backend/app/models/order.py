@@ -17,10 +17,30 @@ class Order(Base):
     phone: Mapped[str] = mapped_column(String(20))
     email: Mapped[str | None] = mapped_column(String(120), nullable=True)
     address: Mapped[str] = mapped_column(Text)
-    total_amount: Mapped[int] = mapped_column(Integer)  # rupees
+    # Structured address (Phase 0) — kept alongside the free-text `address`.
+    city: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    state: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    pincode: Mapped[str | None] = mapped_column(String(10), nullable=True)
+
+    # ---- Money breakdown (rupees) ----
+    subtotal: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    gst_amount: Mapped[int] = mapped_column(Integer, default=0)
+    delivery_charge: Mapped[int] = mapped_column(Integer, default=0)
+    discount: Mapped[int] = mapped_column(Integer, default=0)
+    coupon_code: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    total_amount: Mapped[int] = mapped_column(Integer)  # rupees, final payable
+
     status: Mapped[str] = mapped_column(String(20), default="created", index=True)
+    payment_method: Mapped[str | None] = mapped_column(String(30), nullable=True)
     razorpay_order_id: Mapped[str | None] = mapped_column(String(80), nullable=True, index=True)
     razorpay_payment_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    # Idempotency: dedupe repeated checkout submissions from the same cart.
+    idempotency_key: Mapped[str | None] = mapped_column(
+        String(80), nullable=True, unique=True, index=True
+    )
+    invoice_id: Mapped[int | None] = mapped_column(
+        ForeignKey("invoices.id"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

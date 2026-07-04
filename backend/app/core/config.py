@@ -30,6 +30,18 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:3001"
 
+    # Commerce settings (rupees / percent). Paints & coatings are 18% GST in India.
+    GST_RATE: int = 18
+    DELIVERY_CHARGE: int = 99
+    FREE_DELIVERY_THRESHOLD: int = 2000
+    GSTIN: str = ""  # dealer GST number, printed on invoices when set
+
+    # WhatsApp Business Cloud API (optional — logs in dev until configured).
+    WHATSAPP_TOKEN: str = ""
+    WHATSAPP_PHONE_ID: str = ""
+    WHATSAPP_VERIFY_TOKEN: str = "kamlesh-verify"
+    WHATSAPP_APP_SECRET: str = ""
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     @staticmethod
@@ -55,6 +67,10 @@ class Settings(BaseSettings):
             and self._is_real(self.CLOUDINARY_API_KEY)
             and self._is_real(self.CLOUDINARY_API_SECRET)
         )
+
+    @property
+    def whatsapp_enabled(self) -> bool:
+        return self._is_real(self.WHATSAPP_TOKEN) and self._is_real(self.WHATSAPP_PHONE_ID)
 
     @property
     def cors_origins_list(self) -> list[str]:

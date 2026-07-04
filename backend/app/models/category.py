@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String
+from sqlalchemy import Boolean, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -16,5 +16,6 @@ class Category(Base):
     background: Mapped[str] = mapped_column(String(9))
     count_label: Mapped[str] = mapped_column(String(40))
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     products = relationship("Product", back_populates="category")

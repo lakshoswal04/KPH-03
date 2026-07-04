@@ -25,9 +25,9 @@ type DetailsValues = z.infer<typeof detailsSchema>;
 
 function StatusPill({ status }: { status: string }) {
   const tone =
-    status === "paid"
+    ["paid", "confirmed", "completed", "resolved", "replied"].includes(status)
       ? "bg-mint/20 text-emerald-700"
-      : status === "failed"
+      : ["failed", "cancelled", "archived"].includes(status)
         ? "bg-coral/15 text-coral"
         : "bg-marigold-soft/60 text-orange-deep";
   return (
@@ -114,12 +114,21 @@ export default function ProfilePage() {
       </Reveal>
 
       {user.is_admin && (
-        <Link
-          href="/admin"
-          className="mt-6 inline-block font-sans text-sm font-semibold text-orange hover:opacity-75"
-        >
-          Go to admin dashboard →
-        </Link>
+        <div className="mt-8 rounded-2xl bg-orange/10 border border-orange/30 p-5 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">👑</span>
+            <div>
+              <h3 className="font-display text-base font-bold text-ink">Administrator Account</h3>
+              <p className="font-sans text-xs text-ink-soft">You have full staff privileges to manage products, orders, and surveys.</p>
+            </div>
+          </div>
+          <Link
+            href="/admin"
+            className="rounded-xl bg-orange px-5 py-2.5 font-sans text-xs font-bold uppercase tracking-[1.5px] text-white hover:bg-orange-deep transition-colors shadow-sm"
+          >
+            Open Admin Panel →
+          </Link>
+        </div>
       )}
 
       <div className="mt-12 grid gap-8 lg:grid-cols-[360px_1fr]">

@@ -1,8 +1,27 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
-from app.api.v1 import admin, ai, auth, categories, colours, enquiries, orders, products, surveys
+from app.core.limiter import limiter
+
+from app.api.v1 import (
+    admin,
+    ai,
+    auth,
+    categories,
+    colours,
+    customers,
+    dashboard,
+    enquiries,
+    inventory,
+    orders,
+    products,
+    surveys,
+    whatsapp,
+)
 from app.core.config import settings
 from app.services.image_service import UPLOAD_DIR
 
@@ -11,6 +30,11 @@ app = FastAPI(
     description="API for the Kamlesh Paints & Hardware website — authorised Birla Opus dealer, Shivajinagar, Pune.",
     version="1.0.0",
 )
+
+# Per-IP rate limiting (baseline abuse protection across the whole API).
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,6 +59,10 @@ for router in (
     auth.router,
     admin.router,
     ai.router,
+    inventory.router,
+    dashboard.router,
+    customers.router,
+    whatsapp.router,
 ):
     app.include_router(router, prefix=API_V1)
 

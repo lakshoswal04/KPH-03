@@ -40,7 +40,11 @@ function LoginForm() {
     },
     onSuccess: ({ access_token, me }) => {
       setAuth(access_token, me);
-      router.push(next);
+      if (me.is_admin && (next === "/profile" || !next)) {
+        router.push("/admin");
+      } else {
+        router.push(next);
+      }
     },
   });
 

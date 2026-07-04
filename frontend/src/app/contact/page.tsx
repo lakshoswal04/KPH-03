@@ -3,12 +3,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Input, Textarea, labelClasses } from "@/components/ui/Input";
+import { Input, Select, Textarea, labelClasses } from "@/components/ui/Input";
 import { Reveal } from "@/components/ui/Reveal";
+import { useAuth } from "@/hooks/useAuth";
 import { apiGet, apiPost } from "@/lib/api";
 import { BUSINESS, mailHref, telHref, whatsappHref } from "@/lib/business";
 import type { Enquiry, EnquiryPayload, Product } from "@/types";
@@ -17,8 +18,11 @@ const schema = z.object({
   name: z.string().min(2, "Enter your name"),
   phone: z.string().regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit mobile number"),
   email: z.string().email("Enter a valid email").optional().or(z.literal("")),
+  budget: z.string().optional(),
   message: z.string().min(5, "Tell us what you need"),
 });
+
+const BUDGETS = ["Under ₹10,000", "₹10,000 – ₹25,000", "₹25,000 – ₹50,000", "₹50,000 – ₹1,00,000", "Above ₹1,00,000"];
 
 type FormValues = z.infer<typeof schema>;
 
@@ -32,6 +36,7 @@ const INFO = [
 ];
 
 function ContactForm() {
+  const { token, user } = useAuth();
   const productSlug = useSearchParams().get("product");
 
   // Resolve ?product=<slug> so the enquiry carries the product context.
@@ -44,6 +49,7 @@ function ContactForm() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -52,14 +58,26 @@ function ContactForm() {
       : undefined,
   });
 
+  useEffect(() => {
+    if (user) {
+      if (user.full_name) setValue("name", user.full_name);
+      if (user.phone) setValue("phone", user.phone);
+      if (user.email) setValue("email", user.email);
+    }
+  }, [user, setValue]);
+
   const mutation = useMutation({
     mutationFn: (values: FormValues) => {
       const payload: EnquiryPayload = {
-        ...values,
+        name: values.name,
+        phone: values.phone,
+        message: values.message,
         email: values.email || null,
+        budget: values.budget || null,
         product_id: product?.id ?? null,
+        source: "website",
       };
-      return apiPost<EnquiryPayload, Enquiry>("/enquiries", payload);
+      return apiPost<EnquiryPayload, Enquiry>("/enquiries", payload, token || undefined);
     },
   });
 
@@ -179,6 +197,18 @@ function ContactForm() {
                   {errors.email && (
                     <p className="mt-1.5 font-sans text-xs text-coral">{errors.email.message}</p>
                   )}
+                </div>
+
+                <div>
+                  <label htmlFor="ct-budget" className={labelClasses}>
+                    Estimated budget <span className="normal-case opacity-60">(optional)</span>
+                  </label>
+                  <Select id="ct-budget" {...register("budget")}>
+                    <option value="">Not sure yet</option>
+                    {BUDGETS.map((b) => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </Select>
                 </div>
 
                 <div>

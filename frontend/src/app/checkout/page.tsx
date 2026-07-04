@@ -1,9 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -18,6 +18,8 @@ import type {
   OrderCreateResponse,
   PaymentVerifyPayload,
   PaymentVerifyResponse,
+  QuoteRequest,
+  QuoteResponse,
 } from "@/types";
 
 const schema = z.object({
@@ -25,6 +27,7 @@ const schema = z.object({
   phone: z.string().regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit mobile number"),
   email: z.string().email("Enter a valid email").optional().or(z.literal("")),
   address: z.string().min(5, "Enter your delivery address"),
+  pincode: z.string().regex(/^\d{6}$/, "Enter a valid 6-digit pincode").optional().or(z.literal("")),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -67,7 +70,39 @@ export default function CheckoutPage() {
   const { token, user, isAuthenticated } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [paidOrderId, setPaidOrderId] = useState<number | null>(null);
+  const [invoiceUrl, setInvoiceUrl] = useState<string | null>(null);
   const [payError, setPayError] = useState<string | null>(null);
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+
+  // Stable idempotency key for this cart session — prevents duplicate orders.
+  const idempotencyKey = useRef(
+    `co-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+  ).current;
+
+  const quoteItems = useMemo(
+    () =>
+      items.map((i) => ({
+        product_id: i.product.id,
+        quantity: i.quantity,
+        variant_label: i.variant?.label ?? null,
+      })),
+    [items],
+  );
+
+  // Live server-side pricing (GST, delivery, coupon).
+  const { data: quote } = useQuery({
+    queryKey: ["quote", quoteItems, appliedCoupon],
+    queryFn: () =>
+      apiPost<QuoteRequest, QuoteResponse>("/orders/quote", {
+        items: quoteItems,
+        coupon_code: appliedCoupon,
+      }),
+    enabled: items.length > 0,
+    placeholderData: (prev) => prev,
+  });
+
+  const payable = quote?.total ?? total;
 
   useEffect(() => setMounted(true), []);
 
@@ -86,15 +121,17 @@ export default function CheckoutPage() {
         phone: user.phone ?? "",
         email: user.email ?? "",
         address: "",
+        pincode: "",
       });
     }
   }, [user, reset]);
 
   const verifyMutation = useMutation({
     mutationFn: (payload: PaymentVerifyPayload) =>
-      apiPost<PaymentVerifyPayload, PaymentVerifyResponse>("/orders/verify", payload),
+      apiPost<PaymentVerifyPayload, PaymentVerifyResponse>("/orders/verify", payload, token ?? undefined),
     onSuccess: (data) => {
       setPaidOrderId(data.order_id);
+      setInvoiceUrl(data.invoice_url ?? null);
       clear();
     },
     onError: () => setPayError("Payment verification failed. If money was deducted, contact us."),
@@ -103,13 +140,14 @@ export default function CheckoutPage() {
   const orderMutation = useMutation({
     mutationFn: (values: FormValues) => {
       const payload: OrderCreatePayload = {
-        ...values,
+        customer_name: values.customer_name,
+        phone: values.phone,
         email: values.email || null,
-        items: items.map((i) => ({
-          product_id: i.product.id,
-          quantity: i.quantity,
-          variant_label: i.variant?.label ?? null,
-        })),
+        address: values.address,
+        pincode: values.pincode || null,
+        coupon_code: appliedCoupon,
+        idempotency_key: idempotencyKey,
+        items: quoteItems,
       };
       return apiPost<OrderCreatePayload, OrderCreateResponse>("/orders", payload, token ?? undefined);
     },
@@ -163,14 +201,27 @@ export default function CheckoutPage() {
           </h1>
           <p className="mt-3 font-sans text-body text-ink-soft">
             Order #{paidOrderId} is paid and being packed. We&apos;ll call you to confirm the
-            delivery slot — free delivery anywhere in Pune.
+            delivery slot — free delivery anywhere in Pune. A confirmation has been sent by email
+            and WhatsApp.
           </p>
-          <Link
-            href="/products"
-            className="mt-8 inline-block rounded-btn bg-orange px-[34px] py-[15px] font-sans text-[13px] font-bold uppercase tracking-[1.5px] text-white transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-orange-deep"
-          >
-            Continue Shopping →
-          </Link>
+          <div className="mt-8 flex flex-col items-center gap-3">
+            {invoiceUrl && (
+              <a
+                href={invoiceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-btn border border-ink/15 px-[34px] py-[15px] font-sans text-[13px] font-bold uppercase tracking-[1.5px] text-ink-soft transition-colors hover:border-orange hover:text-orange"
+              >
+                View / print invoice
+              </a>
+            )}
+            <Link
+              href="/products"
+              className="inline-block rounded-btn bg-orange px-[34px] py-[15px] font-sans text-[13px] font-bold uppercase tracking-[1.5px] text-white transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-orange-deep"
+            >
+              Continue Shopping →
+            </Link>
+          </div>
         </div>
       </main>
     );
@@ -262,18 +313,29 @@ export default function CheckoutPage() {
                   <p className="mt-1.5 font-sans text-xs text-coral">{errors.email.message}</p>
                 )}
               </div>
-              <div>
-                <label htmlFor="co-address" className={labelClasses}>
-                  Delivery Address (Pune only)
-                </label>
-                <Textarea
-                  id="co-address"
-                  placeholder="Flat / building, street, locality, pincode"
-                  {...register("address")}
-                />
-                {errors.address && (
-                  <p className="mt-1.5 font-sans text-xs text-coral">{errors.address.message}</p>
-                )}
+              <div className="grid gap-6 sm:grid-cols-[1fr_160px]">
+                <div>
+                  <label htmlFor="co-address" className={labelClasses}>
+                    Delivery Address (Pune only)
+                  </label>
+                  <Textarea
+                    id="co-address"
+                    placeholder="Flat / building, street, locality"
+                    {...register("address")}
+                  />
+                  {errors.address && (
+                    <p className="mt-1.5 font-sans text-xs text-coral">{errors.address.message}</p>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="co-pincode" className={labelClasses}>
+                    Pincode
+                  </label>
+                  <Input id="co-pincode" inputMode="numeric" placeholder="411005" {...register("pincode")} />
+                  {errors.pincode && (
+                    <p className="mt-1.5 font-sans text-xs text-coral">{errors.pincode.message}</p>
+                  )}
+                </div>
               </div>
               <button
                 type="submit"
@@ -282,7 +344,7 @@ export default function CheckoutPage() {
               >
                 {orderMutation.isPending || verifyMutation.isPending
                   ? "Processing…"
-                  : `Pay ₹${formatINR(total)} with Razorpay`}
+                  : `Pay ₹${formatINR(payable)} with Razorpay`}
               </button>
               {payError && <p className="font-sans text-sm text-coral">{payError}</p>}
               <p className="font-sans text-[12px] text-ink-soft">
@@ -307,10 +369,77 @@ export default function CheckoutPage() {
                 </div>
               ))}
             </div>
-            <div className="mt-5 flex justify-between font-sans text-lg font-semibold text-ink">
-              <span>Total</span>
-              <span className="text-orange-deep">₹{formatINR(total)}</span>
+            {/* Coupon */}
+            <div className="mt-5">
+              <div className="flex gap-2">
+                <input
+                  value={couponInput}
+                  onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                  placeholder="Coupon code"
+                  className="min-w-0 flex-1 rounded-lg border border-ink/15 px-3 py-2 font-sans text-sm uppercase text-ink placeholder:normal-case focus:border-orange focus:outline-none"
+                />
+                {appliedCoupon ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAppliedCoupon(null);
+                      setCouponInput("");
+                    }}
+                    className="rounded-lg border border-ink/15 px-3 py-2 font-sans text-xs font-semibold text-ink-soft hover:border-coral hover:text-coral"
+                  >
+                    Remove
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => couponInput && setAppliedCoupon(couponInput)}
+                    className="rounded-lg bg-ink px-3 py-2 font-sans text-xs font-semibold text-white hover:bg-orange-deep"
+                  >
+                    Apply
+                  </button>
+                )}
+              </div>
+              {quote?.coupon_message && (
+                <p
+                  className={`mt-1.5 font-sans text-xs ${quote.discount > 0 ? "text-emerald-600" : "text-coral"}`}
+                >
+                  {quote.coupon_message}
+                </p>
+              )}
             </div>
+
+            {/* Breakdown */}
+            <div className="mt-5 space-y-2 border-t border-ink/10 pt-5 font-sans text-sm text-ink-soft">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span className="text-ink">₹{formatINR(quote?.subtotal ?? total)}</span>
+              </div>
+              {(quote?.discount ?? 0) > 0 && (
+                <div className="flex justify-between text-emerald-600">
+                  <span>Discount</span>
+                  <span>−₹{formatINR(quote!.discount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span>GST</span>
+                <span className="text-ink">₹{formatINR(quote?.gst_amount ?? 0)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Delivery</span>
+                <span className="text-ink">
+                  {quote && quote.delivery_charge === 0 ? "FREE" : `₹${formatINR(quote?.delivery_charge ?? 0)}`}
+                </span>
+              </div>
+            </div>
+            <div className="mt-4 flex justify-between border-t border-ink/10 pt-4 font-sans text-lg font-semibold text-ink">
+              <span>Total</span>
+              <span className="text-orange-deep">₹{formatINR(payable)}</span>
+            </div>
+            {quote?.warnings?.map((w) => (
+              <p key={w} className="mt-2 font-sans text-xs text-amber-600">
+                ⚠ {w}
+              </p>
+            ))}
           </aside>
         </div>
       )}

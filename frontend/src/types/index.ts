@@ -23,6 +23,11 @@ export interface Variant {
   price: number;
 }
 
+export interface Faq {
+  q: string;
+  a: string;
+}
+
 export interface Product {
   id: number;
   slug: string;
@@ -37,6 +42,38 @@ export interface Product {
   variants: Variant[];
   image_url: string | null;
   category_id: number | null;
+
+  // Extended catalogue fields (optional — empty until officially sourced).
+  brand_id?: number | null;
+  summary?: string | null;
+  benefits?: string[];
+  suitable_surfaces?: string[];
+  uses?: string[];
+  coverage?: string | null;
+  finish?: string | null;
+  drying_time?: string | null;
+  application_method?: string | null;
+  coats?: string | null;
+  pack_sizes?: string[];
+  interior_exterior?: string | null;
+  tech_specs?: Record<string, string>;
+  faqs?: Faq[];
+  maintenance?: string | null;
+  safety_tips?: string | null;
+  images?: string[];
+  recommended_primer_id?: number | null;
+  recommended_putty_id?: number | null;
+  related_product_ids?: number[];
+  seo_title?: string | null;
+  seo_description?: string | null;
+  sku?: string | null;
+  price?: number | null;
+  stock?: number;
+  reserved?: number;
+  low_stock_threshold?: number;
+  is_active?: boolean;
+  is_featured?: boolean;
+  available_stock?: number;
 }
 
 export interface ProductList {
@@ -65,16 +102,21 @@ export interface EnquiryPayload {
   email?: string | null;
   message: string;
   product_id?: number | null;
+  budget?: string | null;
+  source?: string;
 }
 
 export interface SurveyPayload {
   name: string;
   phone: string;
+  email?: string | null;
   address: string;
   locality: string;
   property_type: string;
   preferred_date?: string | null;
+  preferred_time?: string | null;
   notes?: string | null;
+  reference_images?: string[];
 }
 
 export interface CalcRequest {
@@ -89,6 +131,46 @@ export interface CalcResponse {
   cost_high: number;
   labour_low: number;
   labour_high: number;
+}
+
+export interface BudgetRequest {
+  area: number;
+  coats: number;
+  grade: "style" | "calista" | "one";
+  primer: boolean;
+  putty: boolean;
+}
+
+export interface BudgetLine {
+  label: string;
+  low: number;
+  high: number;
+}
+
+export interface BudgetRecommendedProduct {
+  id: number;
+  slug: string;
+  name: string;
+  sub_brand: string;
+  image_url: string | null;
+  price_low: number;
+}
+
+export interface BudgetResponse {
+  wall_area: number;
+  paint_litres: number;
+  primer_litres: number;
+  putty_kg: number;
+  breakdown: BudgetLine[];
+  material_low: number;
+  material_high: number;
+  labour_low: number;
+  labour_high: number;
+  gst_low: number;
+  gst_high: number;
+  total_low: number;
+  total_high: number;
+  recommended: BudgetRecommendedProduct[];
 }
 
 export interface RecommendedColour {
@@ -120,12 +202,40 @@ export interface CartItem {
   variant: Variant | null;
 }
 
+export interface OrderItemPayload {
+  product_id: number;
+  quantity: number;
+  variant_label?: string | null;
+}
+
 export interface OrderCreatePayload {
   customer_name: string;
   phone: string;
   email?: string | null;
   address: string;
-  items: { product_id: number; quantity: number; variant_label?: string | null }[];
+  city?: string | null;
+  state?: string | null;
+  pincode?: string | null;
+  coupon_code?: string | null;
+  payment_method?: string | null;
+  idempotency_key?: string | null;
+  items: OrderItemPayload[];
+}
+
+export interface QuoteRequest {
+  items: OrderItemPayload[];
+  coupon_code?: string | null;
+}
+
+export interface QuoteResponse {
+  subtotal: number;
+  discount: number;
+  gst_amount: number;
+  delivery_charge: number;
+  total: number;
+  coupon_code: string | null;
+  coupon_message: string | null;
+  warnings: string[];
 }
 
 export interface OrderCreateResponse {
@@ -147,6 +257,7 @@ export interface PaymentVerifyPayload {
 export interface PaymentVerifyResponse {
   order_id: number;
   status: string;
+  invoice_url?: string | null;
 }
 
 export interface OrderItem {
@@ -165,10 +276,20 @@ export interface Order {
   phone: string;
   email: string | null;
   address: string;
+  city?: string | null;
+  state?: string | null;
+  pincode?: string | null;
+  subtotal?: number | null;
+  gst_amount?: number;
+  delivery_charge?: number;
+  discount?: number;
+  coupon_code?: string | null;
   total_amount: number;
   status: string;
+  payment_method?: string | null;
   razorpay_order_id: string | null;
   razorpay_payment_id: string | null;
+  invoice_id?: number | null;
   created_at: string;
   items: OrderItem[];
 }

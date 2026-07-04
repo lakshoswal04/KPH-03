@@ -17,7 +17,14 @@ def create_enquiry(
     db: Session = Depends(get_db),
     current: User | None = Depends(get_current_user_optional),
 ) -> EnquiryOut:
-    enquiry = Enquiry(**payload.model_dump(), user_id=current.id if current else None)
+    user_id = current.id if current else None
+    if user_id is None:
+        matched = db.query(User).filter(
+            (User.phone == payload.phone) | (User.email == payload.email) if payload.email else (User.phone == payload.phone)
+        ).first()
+        if matched:
+            user_id = matched.id
+    enquiry = Enquiry(**payload.model_dump(), user_id=user_id)
     db.add(enquiry)
     db.commit()
     db.refresh(enquiry)

@@ -63,6 +63,32 @@ export async function apiPatch<TBody, TRes>(
   return handle<TRes>(res);
 }
 
+export async function apiDelete(path: string, token?: string): Promise<void> {
+  const res = await fetch(`${API_URL}/api/v1${path}`, {
+    method: "DELETE",
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+  if (!res.ok && res.status !== 204) {
+    let detail = res.statusText;
+    try {
+      const body = (await res.json()) as { detail?: string };
+      if (body.detail) detail = body.detail;
+    } catch {
+      /* keep statusText */
+    }
+    throw new ApiError(res.status, detail);
+  }
+}
+
+/** GET a file blob (CSV export). */
+export async function apiDownload(path: string, token?: string): Promise<Blob> {
+  const res = await fetch(`${API_URL}/api/v1${path}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+  if (!res.ok) throw new ApiError(res.status, res.statusText);
+  return res.blob();
+}
+
 /** Multipart upload (e.g. product images). Do NOT set Content-Type — the
  * browser adds the multipart boundary automatically. */
 export async function apiUpload<TRes>(

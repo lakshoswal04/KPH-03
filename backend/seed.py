@@ -4,6 +4,7 @@ upserts categories, removes retired ones, adds missing products, refreshes
 images and variants. Run: python seed.py"""
 
 from app.core.database import SessionLocal
+from app.data.birla_specs import SPECS, build_faqs
 from app.models import Category, Colour, Product
 
 CATEGORIES = [
@@ -262,6 +263,84 @@ def compute_variants(product: Product) -> list[dict]:
     return paint_variants(product.price_low, product.price_unit)
 
 
+def apply_catalogue_enrichment(db) -> None:
+    """Idempotently apply official specs, SKUs, default stock, pack sizes, and
+    primer/putty links. Spec values come only from app/data/birla_specs.py
+    (official sources); products without an entry keep empty spec fields."""
+    products = db.query(Product).all()
+    by_name = {p.name.lower(): p for p in products}
+    changed = 0
+    specced = 0
+    for p in products:
+        # Working stock + SKU so the store is purchasable (no official value needed).
+        if not p.sku:
+            p.sku = f"{p.sub_brand[:3].upper()}-{p.id:04d}"
+            changed += 1
+        if (p.stock or 0) == 0 and (p.reserved or 0) == 0:
+            p.stock = 100
+            changed += 1
+        # Pack sizes default from computed variant labels when not officially set.
+        if not p.pack_sizes and p.variants:
+            p.pack_sizes = [v["label"] for v in p.variants]
+            changed += 1
+
+        spec = SPECS.get(p.slug)
+        if not spec:
+            continue
+        for field in (
+            "summary", "finish", "coverage", "drying_time", "coats",
+            "application_method", "interior_exterior",
+        ):
+            if spec.get(field) and getattr(p, field) != spec[field]:
+                setattr(p, field, spec[field])
+        for field in ("suitable_surfaces", "benefits", "pack_sizes"):
+            if spec.get(field):
+                setattr(p, field, spec[field])
+        tech = dict(spec.get("tech_specs", {}))
+        if spec.get("recommended_primer"):
+            tech["Recommended primer"] = spec["recommended_primer"]
+            primer = by_name.get(spec["recommended_primer"].lower())
+            if primer:
+                p.recommended_primer_id = primer.id
+        if spec.get("recommended_putty"):
+            tech["Recommended putty"] = spec["recommended_putty"]
+            putty = by_name.get(spec["recommended_putty"].lower())
+            if putty:
+                p.recommended_putty_id = putty.id
+        if tech:
+            p.tech_specs = tech
+        faqs = build_faqs(spec)
+        if faqs:
+            p.faqs = faqs
+        # SEO metadata derived from official name + summary.
+        p.seo_title = f"{p.name} — Birla Opus | Kamlesh Paints"
+        p.seo_description = (spec.get("summary") or p.description)[:300]
+        specced += 1
+    if changed or specced:
+        db.commit()
+        print(f"Enriched catalogue: {changed} base fields, {specced} products with official specs")
+
+
+def seed_coupons(db) -> None:
+    """Seed a couple of demo coupons (idempotent by code)."""
+    from app.models.coupon import Coupon
+
+    demos = [
+        {"code": "WELCOME10", "discount_type": "percent", "value": 10,
+         "min_order": 500, "max_discount": 300},
+        {"code": "PUNE200", "discount_type": "flat", "value": 200, "min_order": 2000},
+    ]
+    existing = {c.code for c in db.query(Coupon).all()}
+    added = 0
+    for d in demos:
+        if d["code"] not in existing:
+            db.add(Coupon(**d))
+            added += 1
+    if added:
+        db.commit()
+        print(f"Seeded {added} coupons")
+
+
 def main() -> None:
     db = SessionLocal()
     try:
@@ -342,6 +421,9 @@ def main() -> None:
         if updated:
             db.commit()
             print(f"Updated {updated} product image/variant fields")
+
+        apply_catalogue_enrichment(db)
+        seed_coupons(db)
 
         if db.query(Colour).count() == 0:
             order = 0

@@ -133,6 +133,14 @@ export function Navbar() {
                 </span>
               )}
             </Link>
+            {mounted && isAuthenticated && user?.is_admin && (
+              <Link
+                href="/admin"
+                className="rounded-full bg-orange/15 border border-orange/40 px-3 py-1 font-sans text-[11px] font-bold uppercase tracking-[1px] text-orange hover:bg-orange hover:text-white transition-colors"
+              >
+                Admin Panel
+              </Link>
+            )}
             <Link
               href="/#calculator"
               className="hidden rounded-btn border-[1.5px] border-current px-5 py-[9px] font-sans text-[12px] font-semibold uppercase tracking-[1.5px] transition-colors duration-200 hover:border-orange hover:bg-orange hover:text-white md:block"
@@ -197,6 +205,21 @@ export function Navbar() {
                   {mounted && isAuthenticated ? "My Account" : "Log In"}
                 </Link>
               </motion.li>
+              {mounted && isAuthenticated && user?.is_admin && (
+                <motion.li
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: (NAV_LINKS.length + 1) * 0.05, duration: 0.35 }}
+                >
+                  <Link
+                    href="/admin"
+                    className="font-display text-[30px] font-bold text-orange-deep bg-orange/10 px-6 py-2 rounded-2xl"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    👑 Admin Dashboard
+                  </Link>
+                </motion.li>
+              )}
             </ul>
           </motion.div>
         )}
