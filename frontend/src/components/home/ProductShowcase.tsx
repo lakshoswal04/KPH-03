@@ -19,6 +19,7 @@ import type { Product, ProductList } from "@/types";
 const TABS: { id: string; label: string }[] = [
   { id: "interior", label: "Interior Paints" },
   { id: "exterior", label: "Exterior Paints" },
+  { id: "enamels", label: "Enamels" },
   { id: "waterproofing", label: "Waterproofing" },
   { id: "wood", label: "Wood Finishes" },
 ];

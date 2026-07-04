@@ -2,6 +2,21 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import {
   SectionHeader,
@@ -336,7 +351,15 @@ export function WhatsappSection({ token }: { token: string }) {
 
 // ==================== AI Insights ====================
 interface Insights {
+  kpis: {
+    revenue_30d: number; revenue_prev_30d: number; growth_pct: number | null;
+    orders_30d: number; orders_prev_30d: number; aov: number;
+  };
   forecast: { method: string; daily_avg: number; next_30d: number; confidence: string };
+  revenue_series: { date: string; actual: number | null; forecast: number | null }[];
+  category_performance: { category: string; revenue: number; units: number }[];
+  top_products: { name: string; revenue: number; units: number }[];
+  inventory_value: { total_value: number; at_risk_value: number; skus: number };
   slow_moving: { id: number; name: string; stock: number; sold: number }[];
   cross_sell: { a: string; b: string; count: number }[];
   high_value_customers: { id: number; name: string; orders: number; spent: number }[];
@@ -345,29 +368,127 @@ interface Insights {
   summary: string;
   mock: boolean;
 }
+
+const CHART = ["#E8590C", "#F5C518", "#2A9D8F", "#8E7DBE", "#E07A5F"];
+
+function GrowthBadge({ pct }: { pct: number | null }) {
+  if (pct === null) return <span className="text-ink-faint">new</span>;
+  const up = pct >= 0;
+  return (
+    <span className={up ? "text-emerald-600" : "text-rose-600"}>
+      {up ? "▲" : "▼"} {Math.abs(pct)}% vs last month
+    </span>
+  );
+}
+
+function ChartCard({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-ink/8 bg-paper p-5 shadow-card-warm">
+      <p className="font-sans text-[13px] font-bold text-ink">{title}</p>
+      {sub && <p className="mt-0.5 font-sans text-[11px] text-ink-soft">{sub}</p>}
+      <div className="mt-3">{children}</div>
+    </div>
+  );
+}
+
 export function InsightsSection({ token }: { token: string }) {
   const { data, isLoading } = useQuery({
     queryKey: ["adm-insights"],
     queryFn: () => apiGet<Insights>("/admin/dashboard/insights", token),
   });
   if (isLoading || !data) return <p className="font-sans text-ink-soft">Computing insights…</p>;
-  const seg = data.segmentation;
+  const { kpis, seg, inv } = { kpis: data.kpis, seg: data.segmentation, inv: data.inventory_value };
+  const segData = [
+    { name: "New", value: seg.new },
+    { name: "Returning", value: seg.returning },
+    { name: "Dormant", value: seg.dormant },
+  ].filter((d) => d.value > 0);
+
   return (
     <div className="space-y-6">
       <SectionHeader title="AI Business Insights" />
-      <div className="rounded-2xl border border-orange/20 bg-orange/5 p-5">
-        <p className="font-sans text-[11px] font-bold uppercase tracking-wide text-orange-deep">
-          Summary {data.mock && <span className="text-ink-faint">(offline template)</span>}
+
+      {/* Narrative */}
+      <div className="rounded-2xl border border-orange/20 bg-gradient-to-br from-orange/[0.07] to-marigold/[0.05] p-5">
+        <p className="flex items-center gap-2 font-sans text-[11px] font-bold uppercase tracking-wide text-orange-deep">
+          <span className="inline-flex h-5 items-center rounded-full bg-orange/15 px-2 text-[10px]">AI</span>
+          Owner briefing {data.mock && <span className="font-normal normal-case tracking-normal text-ink-faint">(offline template)</span>}
         </p>
         <p className="mt-2 font-sans text-[14px] leading-relaxed text-ink">{data.summary}</p>
       </div>
+
+      {/* KPI row */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Forecast (30d)" value={money(data.forecast.next_30d)} sub={`${data.forecast.confidence} confidence`} accent="#E8590C" />
-        <StatCard label="Returning buyers" value={String(seg.returning)} sub={`${seg.new} new`} />
-        <StatCard label="Dormant" value={String(seg.dormant)} sub="90+ days" />
-        <StatCard label="Restock needed" value={String(data.restock.length)} />
+        <StatCard label="Revenue (30d)" value={money(kpis.revenue_30d)} sub={<GrowthBadge pct={kpis.growth_pct} />} accent="#E8590C" />
+        <StatCard label="Orders (30d)" value={String(kpis.orders_30d)} sub={`avg ${money(kpis.aov)} / order`} />
+        <StatCard label="Forecast (next 30d)" value={money(data.forecast.next_30d)} sub={`${data.forecast.confidence} confidence`} accent="#2A9D8F" />
+        <StatCard label="Stock at risk" value={money(inv.at_risk_value)} sub={`of ${money(inv.total_value)} · ${inv.skus} SKUs`} accent="#E07A5F" />
       </div>
 
+      {/* Revenue trend + forecast */}
+      <ChartCard title="Revenue trend & 30-day forecast" sub="Daily paid revenue (solid) with projected trend (dashed)">
+        <div className="h-[260px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data.revenue_series} margin={{ left: 4, right: 8, top: 4 }}>
+              <defs>
+                <linearGradient id="ins-rev" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#E8590C" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="#E8590C" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#00000008" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="#9a9a88" interval={Math.max(0, Math.floor(data.revenue_series.length / 8))} />
+              <YAxis tick={{ fontSize: 11 }} stroke="#9a9a88" width={52} tickFormatter={(v) => `₹${v >= 1000 ? `${Math.round(v / 1000)}k` : v}`} />
+              <Tooltip formatter={(v: number) => money(v)} contentStyle={{ borderRadius: 12, fontSize: 12, border: "1px solid #00000012" }} />
+              <Area type="monotone" dataKey="actual" stroke="#E8590C" strokeWidth={2} fill="url(#ins-rev)" connectNulls name="Actual" />
+              <Area type="monotone" dataKey="forecast" stroke="#2A9D8F" strokeWidth={2} strokeDasharray="5 4" fill="none" connectNulls name="Forecast" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </ChartCard>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr_1fr]">
+        {/* Category performance */}
+        <ChartCard title="Category performance" sub="Revenue by category (last 90 days)">
+          {data.category_performance.length === 0 ? (
+            <p className="font-sans text-[13px] text-ink-soft">No sales in this window yet.</p>
+          ) : (
+            <div className="h-[260px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data.category_performance} layout="vertical" margin={{ left: 8, right: 16 }}>
+                  <XAxis type="number" tick={{ fontSize: 11 }} stroke="#9a9a88" tickFormatter={(v) => `₹${v >= 1000 ? `${Math.round(v / 1000)}k` : v}`} />
+                  <YAxis type="category" dataKey="category" tick={{ fontSize: 11 }} width={120} stroke="#9a9a88" />
+                  <Tooltip formatter={(v: number) => money(v)} contentStyle={{ borderRadius: 12, fontSize: 12, border: "1px solid #00000012" }} />
+                  <Bar dataKey="revenue" radius={[0, 5, 5, 0]}>
+                    {data.category_performance.map((_, i) => <Cell key={i} fill={CHART[i % CHART.length]} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </ChartCard>
+
+        {/* Segmentation donut */}
+        <ChartCard title="Customer segments" sub={`${seg.total_buyers} buyers total`}>
+          {segData.length === 0 ? (
+            <p className="font-sans text-[13px] text-ink-soft">No buyers yet.</p>
+          ) : (
+            <div className="h-[260px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={segData} dataKey="value" nameKey="name" innerRadius={52} outerRadius={88} paddingAngle={2}>
+                    {segData.map((_, i) => <Cell key={i} fill={CHART[i % CHART.length]} />)}
+                  </Pie>
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                  <Tooltip contentStyle={{ borderRadius: 12, fontSize: 12, border: "1px solid #00000012" }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </ChartCard>
+      </div>
+
+      {/* Detail cards */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-ink/8 bg-paper p-5 shadow-card-warm">
           <p className="font-sans text-[13px] font-bold text-ink">Restock recommendations</p>
@@ -379,6 +500,21 @@ export function InsightsSection({ token }: { token: string }) {
                 <li key={r.id} className="flex justify-between font-sans text-[13px]">
                   <span className="text-ink">{r.name}</span>
                   <span className="text-ink-soft">{r.available} left · reorder {r.suggested_reorder}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="rounded-2xl border border-ink/8 bg-paper p-5 shadow-card-warm">
+          <p className="font-sans text-[13px] font-bold text-ink">Top products by revenue</p>
+          {data.top_products.length === 0 ? (
+            <p className="mt-3 font-sans text-[13px] text-ink-soft">No sales yet.</p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {data.top_products.map((p, i) => (
+                <li key={i} className="flex justify-between font-sans text-[13px]">
+                  <span className="text-ink">{p.name}</span>
+                  <span className="text-ink-soft">{money(p.revenue)} · {p.units} units</span>
                 </li>
               ))}
             </ul>
@@ -401,25 +537,18 @@ export function InsightsSection({ token }: { token: string }) {
         </div>
         <div className="rounded-2xl border border-ink/8 bg-paper p-5 shadow-card-warm">
           <p className="font-sans text-[13px] font-bold text-ink">High-value customers</p>
-          <ul className="mt-3 space-y-2">
-            {data.high_value_customers.map((c) => (
-              <li key={c.id} className="flex justify-between font-sans text-[13px]">
-                <span className="text-ink">{c.name}</span>
-                <span className="text-ink-soft">{money(c.spent)} · {c.orders} orders</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="rounded-2xl border border-ink/8 bg-paper p-5 shadow-card-warm">
-          <p className="font-sans text-[13px] font-bold text-ink">Slow-moving stock</p>
-          <ul className="mt-3 space-y-2">
-            {data.slow_moving.slice(0, 8).map((s) => (
-              <li key={s.id} className="flex justify-between font-sans text-[13px]">
-                <span className="text-ink">{s.name}</span>
-                <span className="text-ink-soft">{s.sold} sold · {s.stock} in stock</span>
-              </li>
-            ))}
-          </ul>
+          {data.high_value_customers.length === 0 ? (
+            <p className="mt-3 font-sans text-[13px] text-ink-soft">No customer orders yet.</p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {data.high_value_customers.map((c) => (
+                <li key={c.id} className="flex justify-between font-sans text-[13px]">
+                  <span className="text-ink">{c.name}</span>
+                  <span className="text-ink-soft">{money(c.spent)} · {c.orders} orders</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </div>

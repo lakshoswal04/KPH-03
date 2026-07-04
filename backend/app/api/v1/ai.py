@@ -1,13 +1,16 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.limiter import limiter
 from app.models.product import Product
 from app.schemas.ai import (
     BudgetRequest,
     BudgetResponse,
     CalculateRequest,
     CalculateResponse,
+    ChatRequest,
+    ChatResponse,
     ColourRecommendRequest,
     ColourRecommendResponse,
     PlanStep,
@@ -16,6 +19,7 @@ from app.schemas.ai import (
     RecommendedColour,
     RecommendedProduct,
 )
+from app.services import chat_service
 from app.services.ai_service import project_plan, recommend_colours
 from app.services.calc_service import calculate_budget, calculate_paint
 
@@ -71,3 +75,12 @@ def plan(payload: ProjectPlanRequest) -> ProjectPlanResponse:
     return ProjectPlanResponse(
         steps=[PlanStep(**s) for s in steps], summary=summary, mock=mock
     )
+
+
+@router.post("/chat", response_model=ChatResponse)
+@limiter.limit("20/minute")
+def chat(request: Request, payload: ChatRequest, db: Session = Depends(get_db)) -> ChatResponse:
+    """Grounded website chatbot — answers from catalogue + colours + business facts."""
+    history = [m.model_dump() for m in payload.history]
+    result = chat_service.answer(payload.message, history, db)
+    return ChatResponse(**result)

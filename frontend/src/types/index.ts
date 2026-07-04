@@ -13,8 +13,10 @@ export interface Category {
 export type ProductTab =
   | "interior"
   | "exterior"
+  | "enamels"
   | "waterproofing"
   | "wood"
+  | "primers"
   | "tools"
   | "hardware";
 
@@ -83,6 +85,7 @@ export interface ProductList {
 
 export interface Colour {
   id: number;
+  code: string | null;
   name: string;
   hex: string;
   family: string;

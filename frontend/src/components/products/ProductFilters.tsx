@@ -28,13 +28,15 @@ const TAB_OPTIONS: { id: Filters["tab"]; label: string }[] = [
   { id: "all", label: "All" },
   { id: "interior", label: "Interior Paints" },
   { id: "exterior", label: "Exterior Paints" },
+  { id: "enamels", label: "Enamels" },
   { id: "waterproofing", label: "Waterproofing" },
   { id: "wood", label: "Wood Finishes" },
+  { id: "primers", label: "Primers & Putty" },
   { id: "tools", label: "Tools" },
   { id: "hardware", label: "Hardware" },
 ];
 
-const SUB_BRANDS = ["ONE", "CALISTA", "STYLE", "ALLDRY", "ALLWOOD", "TOOLS", "HARDWARE"];
+const SUB_BRANDS = ["ONE", "ONE PRO", "CALISTA", "STYLE", "ALLDRY", "ALLWOOD", "TOOLS", "HARDWARE"];
 
 export function ProductFilters({
   filters,

@@ -4,6 +4,7 @@ import { DM_Sans, Fraunces } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import { Providers } from "@/components/providers";
 import { CustomCursor } from "@/components/ui/CustomCursor";
 
@@ -53,6 +54,7 @@ export default function RootLayout({
           {children}
           <Footer />
           <WhatsAppButton />
+          <ChatWidget />
           <CustomCursor />
         </Providers>
       </body>

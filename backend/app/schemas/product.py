@@ -88,6 +88,7 @@ class VariantIn(BaseModel):
 class _ProductExtra(BaseModel):
     """Optional extended catalogue/commerce fields shared by create + update."""
 
+    image_url: str | None = Field(default=None, max_length=500)
     brand_id: int | None = None
     summary: str | None = Field(default=None, max_length=400)
     benefits: list[str] | None = None

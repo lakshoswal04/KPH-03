@@ -88,3 +88,41 @@ class ProjectPlanResponse(BaseModel):
     steps: list[PlanStep]
     summary: str
     mock: bool
+
+
+# ---- Website chatbot ----
+class ChatMessage(BaseModel):
+    role: str = Field(pattern="^(user|assistant)$")
+    content: str = Field(min_length=1, max_length=2000)
+
+
+class ChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=1000)
+    history: list[ChatMessage] = Field(default_factory=list, max_length=12)
+
+
+class ChatProductCard(BaseModel):
+    id: int
+    slug: str
+    name: str
+    sub_brand: str
+    tab: str
+    image_url: str | None = None
+    price_low: int
+    price_unit: str
+
+
+class ChatColourCard(BaseModel):
+    id: int
+    code: str | None = None
+    name: str
+    hex: str
+    family: str
+
+
+class ChatResponse(BaseModel):
+    reply: str
+    products: list[ChatProductCard] = []
+    colours: list[ChatColourCard] = []
+    escalate: bool = False
+    mock: bool = False

@@ -5,6 +5,7 @@ class ColourOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    code: str | None = None
     name: str
     hex: str
     family: str

@@ -1,6 +1,7 @@
 // Sub-brand accent colours from the design spec — shared by server and client components.
 export const SUB_BRAND_ACCENTS: Record<string, string> = {
   ONE: "#C9A876",
+  "ONE PRO": "#B08D57",
   CALISTA: "#0ABFBC",
   STYLE: "#A8C8A0",
   ALLDRY: "#FF4D6D",
