@@ -8,6 +8,12 @@ from app.core.config import settings
 from app.core.database import Base
 
 config = context.config
+import urllib.parse
+try:
+    parsed = urllib.parse.urlparse(settings.DATABASE_URL)
+    print(f"DIAGNOSTIC: DATABASE_URL host={parsed.hostname}, port={parsed.port}, path={parsed.path}")
+except Exception as e:
+    print(f"DIAGNOSTIC: Error parsing DATABASE_URL: {e}")
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 if config.config_file_name is not None:
