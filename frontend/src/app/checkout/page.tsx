@@ -31,6 +31,7 @@ const schema = z.object({
 });
 
 type FormValues = z.infer<typeof schema>;
+type PaymentMethod = "razorpay" | "cod";
 
 interface RazorpayOptions {
   key: string;
@@ -65,6 +66,95 @@ function loadRazorpayScript(): Promise<boolean> {
   });
 }
 
+/* ─── Payment Method Selector Card ────────────────────────────────── */
+function PaymentMethodCard({
+  method,
+  selected,
+  onSelect,
+}: {
+  method: PaymentMethod;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const isOnline = method === "razorpay";
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`
+        group relative flex flex-1 cursor-pointer flex-col items-center gap-2.5 rounded-2xl border-2 p-5 text-center
+        transition-all duration-300 ease-out
+        ${
+          selected
+            ? isOnline
+              ? "border-orange bg-gradient-to-br from-orange/[0.06] to-orange/[0.015] shadow-[0_0_0_1px_rgba(232,89,12,0.12),0_8px_24px_rgba(232,89,12,0.1)]"
+              : "border-emerald-500 bg-gradient-to-br from-emerald-500/[0.06] to-emerald-500/[0.015] shadow-[0_0_0_1px_rgba(16,185,129,0.12),0_8px_24px_rgba(16,185,129,0.1)]"
+            : "border-ink/10 bg-paper hover:border-ink/25 hover:shadow-card-warm"
+        }
+      `}
+    >
+      {/* Radio circle */}
+      <span
+        className={`
+          flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200
+          ${
+            selected
+              ? isOnline
+                ? "border-orange"
+                : "border-emerald-500"
+              : "border-ink/25 group-hover:border-ink/40"
+          }
+        `}
+      >
+        {selected && (
+          <span
+            className={`block h-2.5 w-2.5 rounded-full ${isOnline ? "bg-orange" : "bg-emerald-500"}`}
+            style={{ animation: "scaleIn 0.25s cubic-bezier(0.34,1.56,0.64,1)" }}
+          />
+        )}
+      </span>
+
+      {/* Icon */}
+      <span className="text-2xl">{isOnline ? "💳" : "🏠"}</span>
+
+      {/* Label */}
+      <span className={`font-sans text-sm font-bold ${selected ? "text-ink" : "text-ink-soft"}`}>
+        {isOnline ? "Pay Online" : "Cash on Delivery"}
+      </span>
+
+      {/* Badge */}
+      <span
+        className={`
+          rounded-full px-2.5 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wider
+          ${
+            isOnline
+              ? selected
+                ? "bg-orange/10 text-orange"
+                : "bg-ink/5 text-ink-soft"
+              : selected
+                ? "bg-emerald-500/10 text-emerald-600"
+                : "bg-ink/5 text-ink-soft"
+          }
+        `}
+      >
+        {isOnline ? "UPI · Card · NetBanking" : "Pay when delivered"}
+      </span>
+
+      {/* Trust element for COD */}
+      {!isOnline && selected && (
+        <span className="mt-0.5 inline-flex items-center gap-1 font-sans text-[11px] text-emerald-600">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <polyline points="9 12 11.5 14.5 15 10" />
+          </svg>
+          No advance payment needed
+        </span>
+      )}
+    </button>
+  );
+}
+
+/* ─── Checkout Page ───────────────────────────────────────────────── */
 export default function CheckoutPage() {
   const { items, total, clear, keyOf } = useCart();
   const { token, user, isAuthenticated } = useAuth();
@@ -74,6 +164,8 @@ export default function CheckoutPage() {
   const [payError, setPayError] = useState<string | null>(null);
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("razorpay");
+  const [isCodOrder, setIsCodOrder] = useState(false);
 
   // Stable idempotency key for this cart session — prevents duplicate orders.
   const idempotencyKey = useRef(
@@ -146,6 +238,7 @@ export default function CheckoutPage() {
         address: values.address,
         pincode: values.pincode || null,
         coupon_code: appliedCoupon,
+        payment_method: paymentMethod,
         idempotency_key: idempotencyKey,
         items: quoteItems,
       };
@@ -153,11 +246,21 @@ export default function CheckoutPage() {
     },
     onSuccess: async (order, values) => {
       setPayError(null);
+
+      // ── COD flow — order is immediately confirmed on the backend ──
+      if (order.payment_method === "cod") {
+        setPaidOrderId(order.order_id);
+        setInvoiceUrl(order.invoice_url ?? null);
+        setIsCodOrder(true);
+        clear();
+        return;
+      }
+
+      // ── Online payment flow ───────────────────────────────────────
       if (order.mock) {
-        // Dev mode: no Razorpay keys — complete the flow with the mock signature.
         verifyMutation.mutate({
           order_id: order.order_id,
-          razorpay_order_id: order.razorpay_order_id,
+          razorpay_order_id: order.razorpay_order_id!,
           razorpay_payment_id: `pay_mock_${Date.now()}`,
           razorpay_signature: "mock_signature",
         });
@@ -169,12 +272,12 @@ export default function CheckoutPage() {
         return;
       }
       new window.Razorpay({
-        key: order.key_id,
-        amount: order.amount,
-        currency: order.currency,
+        key: order.key_id!,
+        amount: order.amount!,
+        currency: order.currency!,
         name: "Kamlesh Paints & Hardware",
         description: `Order #${order.order_id}`,
-        order_id: order.razorpay_order_id,
+        order_id: order.razorpay_order_id!,
         prefill: { name: values.customer_name, contact: values.phone, email: values.email || undefined },
         theme: { color: "#E8590C" },
         handler: (response) =>
@@ -189,21 +292,44 @@ export default function CheckoutPage() {
     onError: () => setPayError("Could not create the order — please try again."),
   });
 
+  /* ─── Order Confirmed Screen ────────────────────────────────────── */
   if (paidOrderId !== null) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-cream px-6 pt-nav">
         <div className="max-w-md text-center">
-          <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange text-3xl text-white">
-            ✓
+          <span
+            className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full text-3xl text-white ${isCodOrder ? "bg-emerald-500" : "bg-orange"}`}
+          >
+            {isCodOrder ? "📦" : "✓"}
           </span>
           <h1 className="mt-6 font-display text-[40px] font-black text-ink">
-            Order confirmed<span className="text-orange">.</span>
+            {isCodOrder ? "Order placed" : "Order confirmed"}
+            <span className={isCodOrder ? "text-emerald-500" : "text-orange"}>.</span>
           </h1>
           <p className="mt-3 font-sans text-body text-ink-soft">
-            Order #{paidOrderId} is paid and being packed. We&apos;ll call you to confirm the
-            delivery slot — free delivery anywhere in Pune. A confirmation has been sent by email
-            and WhatsApp.
+            {isCodOrder ? (
+              <>
+                Order #{paidOrderId} has been placed successfully! Our team will call you to
+                confirm the delivery slot. <strong>Pay ₹{formatINR(payable)} on delivery.</strong>{" "}
+                Free delivery anywhere in Pune.
+              </>
+            ) : (
+              <>
+                Order #{paidOrderId} is paid and being packed. We&apos;ll call you to confirm the
+                delivery slot — free delivery anywhere in Pune. A confirmation has been sent by email
+                and WhatsApp.
+              </>
+            )}
           </p>
+          {isCodOrder && (
+            <div className="mx-auto mt-5 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-2 font-sans text-sm font-semibold text-emerald-600">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <polyline points="9 12 11.5 14.5 15 10" />
+              </svg>
+              Cash on Delivery — No advance payment
+            </div>
+          )}
           <div className="mt-8 flex flex-col items-center gap-3">
             {invoiceUrl && (
               <a
@@ -217,7 +343,7 @@ export default function CheckoutPage() {
             )}
             <Link
               href="/products"
-              className="inline-block rounded-btn bg-orange px-[34px] py-[15px] font-sans text-[13px] font-bold uppercase tracking-[1.5px] text-white transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-orange-deep"
+              className={`inline-block rounded-btn px-[34px] py-[15px] font-sans text-[13px] font-bold uppercase tracking-[1.5px] text-white transition-[background-color,transform] duration-200 hover:-translate-y-0.5 ${isCodOrder ? "bg-emerald-500 hover:bg-emerald-600" : "bg-orange hover:bg-orange-deep"}`}
             >
               Continue Shopping →
             </Link>
@@ -259,6 +385,12 @@ export default function CheckoutPage() {
 
   return (
     <main className="min-h-screen bg-cream px-6 pb-section-y pt-[calc(72px+60px)] md:px-section-x">
+      <style jsx>{`
+        @keyframes scaleIn {
+          from { transform: scale(0); }
+          to   { transform: scale(1); }
+        }
+      `}</style>
       <Reveal>
         <p className="font-sans text-label font-bold uppercase text-orange">Almost there</p>
         <h1 className="mt-4 font-display text-section-h2 font-black text-ink">
@@ -337,19 +469,46 @@ export default function CheckoutPage() {
                   )}
                 </div>
               </div>
+
+              {/* ── Payment Method Selector ────────────────────────── */}
+              <div>
+                <p className={labelClasses}>Payment Method</p>
+                <div className="mt-2 flex gap-3">
+                  <PaymentMethodCard
+                    method="razorpay"
+                    selected={paymentMethod === "razorpay"}
+                    onSelect={() => setPaymentMethod("razorpay")}
+                  />
+                  <PaymentMethodCard
+                    method="cod"
+                    selected={paymentMethod === "cod"}
+                    onSelect={() => setPaymentMethod("cod")}
+                  />
+                </div>
+              </div>
+
               <button
                 type="submit"
                 disabled={orderMutation.isPending || verifyMutation.isPending}
-                className="w-full rounded bg-orange p-4 font-sans text-sm font-bold uppercase tracking-[2px] text-white transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-orange-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink active:translate-y-0 disabled:opacity-60"
+                className={`
+                  w-full rounded p-4 font-sans text-sm font-bold uppercase tracking-[2px] text-white
+                  transition-[background-color,transform] duration-200 hover:-translate-y-0.5
+                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink
+                  active:translate-y-0 disabled:opacity-60
+                  ${paymentMethod === "cod" ? "bg-emerald-500 hover:bg-emerald-600" : "bg-orange hover:bg-orange-deep"}
+                `}
               >
                 {orderMutation.isPending || verifyMutation.isPending
                   ? "Processing…"
-                  : `Pay ₹${formatINR(payable)} with Razorpay`}
+                  : paymentMethod === "cod"
+                    ? `Place Order — ₹${formatINR(payable)} (Pay on Delivery)`
+                    : `Pay ₹${formatINR(payable)} with Razorpay`}
               </button>
               {payError && <p className="font-sans text-sm text-coral">{payError}</p>}
               <p className="font-sans text-[12px] text-ink-soft">
-                Payments are processed securely by Razorpay and verified on our server. In dev mode
-                (no keys configured) a mock payment completes the flow.
+                {paymentMethod === "cod"
+                  ? "Your order will be confirmed and delivered to your address. Pay the delivery person when your order arrives."
+                  : "Payments are processed securely by Razorpay and verified on our server. In dev mode (no keys configured) a mock payment completes the flow."}
               </p>
             </div>
           </form>

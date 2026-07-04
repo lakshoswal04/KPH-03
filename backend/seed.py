@@ -276,6 +276,30 @@ IMAGE_MAP = {
     "allwood-italian-pu": "/products/allwood-italian-pu.png",
     "allwood-melamine": "/products/allwood-melamine.png",
     "allwood-wood-stain": "/products/allwood-wood-stain.png",
+    # Full-range products (2026-07-04) — official Scene7 packshots, downloaded
+    # via assets.birlaopus.com ?$grasim-png-transparent$&wid=800.
+    "calista-everwash": "/products/calista-everwash.png",
+    "style-color-smart-shine": "/products/style-color-smart-shine.png",
+    "style-super-bright": "/products/style-super-bright.png",
+    "style-colour-fresh": "/products/style-colour-fresh.png",
+    "one-true-life": "/products/one-true-life.png",
+    "style-power-bright": "/products/style-power-bright.png",
+    "calista-sparkle-gloss": "/products/calista-sparkle-gloss.png",
+    "calista-sparkle-pu": "/products/calista-sparkle-pu.png",
+    "calista-sparkle-red-oxide-primer": "/products/calista-sparkle-red-oxide-primer.png",
+    "calista-sparkle-yellow-metal-primer": "/products/calista-sparkle-yellow-metal-primer.png",
+    "alldry-wall-n-roof-10": "/products/alldry-wall-n-roof-10.png",
+    "alldry-total-2k": "/products/alldry-total-2k.png",
+    "alldry-repair-master": "/products/alldry-repair-master.png",
+    "allwood-pu-exterior": "/products/allwood-pu-exterior.png",
+    "allwood-softtouch": "/products/allwood-softtouch.png",
+    "allwood-melamine-ultra-clear": "/products/allwood-melamine-ultra-clear.png",
+    "allwood-wood-filler": "/products/allwood-wood-filler.png",
+    # File name avoids the slug's "+" (URL-unsafe).
+    "one-pro-putty+primer": "/products/one-pro-putty-primer.png",
+    "one-pro-smooth-primer": "/products/one-pro-smooth-primer.png",
+    "one-pro-smooth-putty": "/products/one-pro-smooth-putty.png",
+    "style-perfect-start-primer": "/products/style-perfect-start-primer.png",
     # Tools — on-brand catalogue tiles (replace with real product photos later).
     "paint-roller": "/products/tools/paint-roller.svg",
     "paint-brush": "/products/tools/paint-brush.svg",
@@ -284,6 +308,9 @@ IMAGE_MAP = {
     "sandpaper": "/products/tools/sandpaper.svg",
     "waterpaper": "/products/tools/waterpaper.svg",
     "metal-scraper": "/products/tools/metal-scraper.svg",
+    # Official Birla Opus tools — real packshots.
+    "interior-foam-roller": "/products/tools/interior-foam-roller.png",
+    "cloud-finish-roller": "/products/tools/cloud-finish-roller.png",
     # Hardware — on-brand catalogue tiles.
     "cpvc-pipe": "/products/hardware/cpvc-pipe.svg",
     "upvc-pipe": "/products/hardware/upvc-pipe.svg",

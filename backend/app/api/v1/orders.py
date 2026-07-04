@@ -74,15 +74,22 @@ def create_order(
             )
             .first()
         )
-        if existing and existing.razorpay_order_id:
-            return OrderCreateResponse(
-                order_id=existing.id,
-                razorpay_order_id=existing.razorpay_order_id,
-                amount=existing.total_amount * 100,
-                currency="INR",
-                key_id=settings.RAZORPAY_KEY_ID,
-                mock=not settings.razorpay_enabled,
-            )
+        if existing:
+            if existing.payment_method == "cod":
+                return OrderCreateResponse(
+                    order_id=existing.id,
+                    payment_method="cod",
+                )
+            if existing.razorpay_order_id:
+                return OrderCreateResponse(
+                    order_id=existing.id,
+                    payment_method="razorpay",
+                    razorpay_order_id=existing.razorpay_order_id,
+                    amount=existing.total_amount * 100,
+                    currency="INR",
+                    key_id=settings.RAZORPAY_KEY_ID,
+                    mock=not settings.razorpay_enabled,
+                )
 
     totals = compute_totals(payload.items, payload.coupon_code, db)
 
@@ -125,12 +132,42 @@ def create_order(
         if c:
             c.used_count += 1
 
+    # ── COD path — skip Razorpay entirely ────────────────────────────
+    if (payload.payment_method or "").lower() == "cod":
+        order.payment_method = "cod"
+        order.status = "cod_pending"
+        db.flush()
+        commit_stock_sale(order, db)
+        db.add(Payment(
+            order_id=order.id, method="cod",
+            amount=order.total_amount, gst_amount=order.gst_amount,
+            status="pending",
+        ))
+        invoice = generate_invoice(order, db)
+        db.commit()
+
+        msg = (
+            f"Order #{order.id} placed (COD) — ₹{order.total_amount:,}. "
+            f"Invoice {invoice.number}. Pay on delivery. Thank you!"
+        )
+        send_notification("COD Order", f"Order #{order.id} — ₹{order.total_amount:,} COD — {order.customer_name}")
+        send_customer_email(order.email, f"Order #{order.id} placed (COD)", f"{msg}\nInvoice: {invoice.pdf_url}")
+        send_text(order.phone, msg)
+
+        return OrderCreateResponse(
+            order_id=order.id,
+            payment_method="cod",
+            invoice_url=invoice.pdf_url,
+        )
+
+    # ── Online payment path — create Razorpay order ──────────────────
     rzp = create_razorpay_order(totals.total, receipt=f"kph-order-{order.id}")
     order.razorpay_order_id = rzp["id"]
     db.commit()
 
     return OrderCreateResponse(
         order_id=order.id,
+        payment_method="razorpay",
         razorpay_order_id=rzp["id"],
         amount=rzp["amount"],
         currency=rzp["currency"],

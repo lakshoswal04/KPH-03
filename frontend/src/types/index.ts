@@ -243,11 +243,13 @@ export interface QuoteResponse {
 
 export interface OrderCreateResponse {
   order_id: number;
-  razorpay_order_id: string;
-  amount: number;
-  currency: string;
-  key_id: string;
-  mock: boolean;
+  payment_method: "razorpay" | "cod";
+  razorpay_order_id?: string;
+  amount?: number;
+  currency?: string;
+  key_id?: string;
+  mock?: boolean;
+  invoice_url?: string | null;
 }
 
 export interface PaymentVerifyPayload {
