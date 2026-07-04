@@ -32,7 +32,7 @@ class Settings(BaseSettings):
 
     # Commerce settings (rupees / percent). Paints & coatings are 18% GST in India.
     GST_RATE: int = 18
-    DELIVERY_CHARGE: int = 99
+    DELIVERY_CHARGE: int = 30
     FREE_DELIVERY_THRESHOLD: int = 2000
     GSTIN: str = ""  # dealer GST number, printed on invoices when set
 

@@ -15,12 +15,12 @@ export function WhatsAppButton() {
       rel="noopener noreferrer"
       data-magnetic
       aria-label="Chat on WhatsApp"
-      className="wa-btn group fixed bottom-8 right-8 z-[90] flex h-[58px] w-[58px] items-center justify-center rounded-full bg-whatsapp shadow-wa"
+      className="wa-btn group fixed bottom-8 left-8 z-[90] flex h-[58px] w-[58px] items-center justify-center rounded-full bg-whatsapp shadow-wa"
     >
       <svg width="28" height="28" viewBox="0 0 24 24" fill="#FFFFFF" aria-hidden="true">
         <path d={WA_PATH} />
       </svg>
-      <span className="pointer-events-none absolute right-[68px] whitespace-nowrap rounded-full bg-ink px-3.5 py-2 font-sans text-[13px] font-semibold text-ivory-text opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+      <span className="pointer-events-none absolute left-[68px] whitespace-nowrap rounded-full bg-ink px-3.5 py-2 font-sans text-[13px] font-semibold text-ivory-text opacity-0 transition-opacity duration-200 group-hover:opacity-100">
         Chat on WhatsApp
       </span>
     </a>

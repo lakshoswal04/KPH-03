@@ -121,20 +121,30 @@ export default function CartPage() {
             <h2 className="font-display text-2xl font-bold text-ink">Summary</h2>
             <div className="mt-6 space-y-3 border-b border-ink/10 pb-6">
               <div className="flex justify-between font-sans text-sm text-ink-soft">
-                <span>Items</span>
+                <span>Subtotal</span>
                 <span>₹{formatINR(total)}</span>
               </div>
               <div className="flex justify-between font-sans text-sm text-ink-soft">
+                <span>GST (18%)</span>
+                <span>₹{formatINR(Math.round(total * 0.18))}</span>
+              </div>
+              <div className="flex justify-between font-sans text-sm text-ink-soft">
                 <span>Delivery (Pune)</span>
-                <span className="text-mint">Free</span>
+                {total >= 2000 ? (
+                  <span className="text-mint">Free</span>
+                ) : (
+                  <span>₹30</span>
+                )}
               </div>
             </div>
             <div className="mt-5 flex justify-between font-sans text-lg font-semibold text-ink">
-              <span>Total</span>
-              <span className="text-orange-deep">₹{formatINR(total)}</span>
+              <span>Est. Total</span>
+              <span className="text-orange-deep">
+                ₹{formatINR(total + Math.round(total * 0.18) + (total >= 2000 ? 0 : 30))}
+              </span>
             </div>
             <p className="mt-2 font-sans text-[12px] text-ink-soft">
-              Estimated from base prices — final billing confirmed on shade and pack size.
+              Includes 18% GST. Free delivery on orders above ₹2,000. Final billing confirmed at checkout.
             </p>
             <Link
               href="/checkout"
