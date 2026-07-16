@@ -32,6 +32,7 @@ const TAB_OPTIONS: { id: Filters["tab"]; label: string }[] = [
   { id: "waterproofing", label: "Waterproofing" },
   { id: "wood", label: "Wood Finishes" },
   { id: "primers", label: "Primers & Putty" },
+  { id: "aerosols", label: "Aerosols" },
   { id: "tools", label: "Tools" },
   { id: "hardware", label: "Hardware" },
 ];

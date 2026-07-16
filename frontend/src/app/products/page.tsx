@@ -18,6 +18,7 @@ const VALID_TABS: (ProductTab | "all")[] = [
   "waterproofing",
   "wood",
   "primers",
+  "aerosols",
   "tools",
   "hardware",
 ];

@@ -17,6 +17,7 @@ export type ProductTab =
   | "waterproofing"
   | "wood"
   | "primers"
+  | "aerosols"
   | "tools"
   | "hardware";
 
